@@ -54,4 +54,18 @@ PPcalibrate <- function(
     sensible_initialisation = TRUE,
     s = NA, h = NA,
     calendar_ages = NA) {
+
+  ####################################
+  ## Create initial values for lambda (specifically s and h)
+
+  ####################################
+  # Perform MCMC - RJMCMC within Gibbs
+  # Consist of iterating between:
+  #    i) Updating calendar_ages given lambda (s,h) and rc_determinations
+  #    ii) Updating lambda (s, h) given calendar_ages using RJ MCMC
+
+  .resample(4,1)
+  ####################################
+  # Return the relevant outputs
+  return("Hello World")
 }
