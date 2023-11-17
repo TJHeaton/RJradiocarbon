@@ -74,13 +74,85 @@
   # Determine acceptance and return result
   if(stats::runif(1) < hastings_ratio) {
     # Accept and return modified changepoints
-    retlist <- list(s = rate_s_new, integrated_rate = integrated_rate_new)
+    retlist <- list(rate_s = rate_s_new, integrated_rate = integrated_rate_new)
   } else {
     # Else reject and return old changepoints
-    retlist <- list(s = rate_s, integrated_rate = integrated_rate)
+    retlist <- list(rate_s = rate_s, integrated_rate = integrated_rate)
   }
   return(retlist)
 }
+
+
+
+## Proposal 2: Alter the height of a randomly chosen step
+# Arguments:
+# calendar_ages - the observed thetas
+# rate_s - the current changepoints in the rate
+# rate_h - the heights
+# integrated_rate - integral_0^L nu(t) dt
+# prior_h_alpha, prior_h_beta - prior parameters on heights
+# Heights h are drawn from Gamma(alpha, beta) distribution
+.ChangeHeight <- function(
+    calendar_ages,
+    rate_s,
+    rate_h,
+    integrated_rate,
+    prior_alpha,
+    prior_beta)
+{
+  n_heights <- length(rate_h)
+  n_observations <- length(calendar_ages)
+
+  # Select step height to alter - will change height between s[j] and s[j+1]
+  j <- sample(n_heights, 1)
+  # Can use sample as just pass a integer so will pick from 1:n_heights
+
+  # Propose new height of step so that log(h_j_new/h_j_old) ~ Unif[-0.5, 0.5]
+  h_j_old <- rate_h[j]
+  u <- stats::runif(1, min = -0.5, max = 0.5)
+  h_j_new <- h_j_old * exp(u)
+
+  # Store new set of heights
+  rate_h_new <- rate_h
+  rate_h_new[j] <- h_j_new
+
+  # Find prior h ratio
+  log_prior_h_ratio <- (prior_alpha * u) - (prior_beta * (h_j_new - h_j_old))
+
+  # Adjust the integrated rate to account for new height between s[j] and s[j+1]
+  integrated_rate_new <- integrated_rate + (h_j_new - h_j_old)*(rate_s[j+1] - rate_s[j])
+
+  # Number of calendar ages that have been affected by changepoint shift
+  n_calendar_ages_affected <- sum(calendar_ages > rate_s[j] & calendar_ages < rate_s[j+1])
+
+  log_lik_old <- (n_calendar_ages_affected * log(h_j_old)) - integrated_rate # In old these have rate h_j_old
+  log_lik_new <- (n_calendar_ages_affected * log(h_j_new)) - integrated_rate_new # In new they have rate h_j_new
+  log_calendar_lik_ratio <- log_lik_new - log_lik_old
+
+  # Find acceptance probability (use log rather than multiply as logphratio is simple format)
+  hastings_ratio <- exp(log_prior_h_ratio + log_calendar_lik_ratio)
+
+  # Determine acceptance and return result
+  if(stats::runif(1) < hastings_ratio)	{
+    retlist <- list(rate_h = rate_h_new, integrated_rate = integrated_rate_new)	# Accept and return modified heights and intrate
+  }	else {
+    retlist <- list(rate_h = rate_h, integrated_rate = integrated_rate)	# Reject and return old heights and intrate
+  }
+  return(retlist)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
