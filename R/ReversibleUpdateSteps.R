@@ -27,7 +27,7 @@
 
   # Propose new changepoint position
   rate_s_new <- rate_s
-  rate_s_new[j] <- runif(1, min = rate_s[j - 1], max = rate_s[j + 1])
+  rate_s_new[j] <- stats::runif(1, min = rate_s[j - 1], max = rate_s[j + 1])
 
   # Find prior ratio for rate s
   prior_rate_s_new   <- ((rate_s_new[j + 1] - rate_s_new[j])
@@ -46,35 +46,33 @@
 
   # Find which calendar_ages will contribute to the likelihood ratio and find their log-likelihood
   if(rate_s_new[j] < rate_s[j]) { # Have shifted new changepoint towards t = 0
+    # Find the range of cal ages in which the rate has changed
     min_sj <- rate_s_new[j]
     max_sj <- rate_s[j]
-    # Number of calendar ages that have been affected by changepoint shift
-    n_calendar_ages_affected <- sum(calendar_ages > min_sj & calendar_ages < max_sj)
-
-    # With old/current rate these calendar_ages have rate h[j-1] as before s[j]
-    log_lik_old <- (n_calendar_ages_affected * log(rate_h[j-1])) - integrated_rate
-    # With new rate they have rate h[j] as after s_new[j]
-    log_lik_new <- (n_calendar_ages_affected * log(rate_h[j])) - integrated_rate_new
-
-  } else { # Have shifted new changepoint away from t = 0
+    # Find the value of the rate in this interval (both existing and proposed)
+    old_h_interval <- rate_h[j-1]
+    new_h_interval <- rate_h[j]
+  } else {  # Have shifted new changepoint away from t = 0
+    # Find the range of cal ages in which the rate has changed
     min_sj <- rate_s[j]
     max_sj <- rate_s_new[j]
-    # Number of calendar ages that have been affected by changepoint shift
-    n_calendar_ages_affected <- sum(calendar_ages > min_sj & calendar_ages < max_sj)
-
-    # With old/current rate these calendar_ages have rate h[j] as after s[j]
-    log_lik_old <- (n_calendar_ages_affected * log(rate_h[j])) - integrated_rate
-    # With new rate they have rate h[j-1] as before s_new[j]
-    log_lik_new <- (n_calendar_ages_affected * log(rate_h[j-1])) - integrated_rate_new
+    # Find the value of the rate in this interval (note swap from above)
+    old_h_interval <- rate_h[j]
+    new_h_interval <- rate_h[j-1]
   }
 
+  # Number of calendar ages that have been affected by changepoint shift
+  n_calendar_ages_affected <- sum(calendar_ages > min_sj & calendar_ages < max_sj)
+
+  log_lik_old <- (n_calendar_ages_affected * log(old_h_interval)) - integrated_rate
+  log_lik_new <- (n_calendar_ages_affected * log(new_h_interval)) - integrated_rate_new
   calendar_ages_lik_ratio <- exp(log_lik_new - log_lik_old)
 
   # Find acceptance probability
   hastings_ratio <- calendar_ages_lik_ratio * prior_rate_s_ratio
 
   # Determine acceptance and return result
-  if(runif(1) < hastings_ratio) {
+  if(stats::runif(1) < hastings_ratio) {
     # Accept and return modified changepoints
     retlist <- list(s = rate_s_new, integrated_rate = integrated_rate_new)
   } else {
