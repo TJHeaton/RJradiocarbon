@@ -23,7 +23,7 @@ test_that("Birth gives expected outcomes", {
   n_heights <- rep(NA, n_iters)
   are_heights_positive <- rep(NA, n_iters)
   are_changepoints_increasing <- rep(NA, n_iters)
-  are_changepoints_inbounds <- rep(NA, n_iters)
+  are_changepoints_bounds_correct <- rep(NA, n_iters)
   are_rate_lengths_compatible <- rep(NA, n_iters)
 
   set.seed(11)
@@ -36,7 +36,7 @@ test_that("Birth gives expected outcomes", {
       prior_h_alpha = prior_h_alpha,
       prior_h_beta = prior_h_beta,
       prior_n_change_lambda = prior_n_change_lambda,
-      prop_birth_ratio = prop_birth_ratio)
+      proposal_ratio = prop_birth_ratio)
 
     rate_h <- return_rate_h <- return_val$rate_h
     rate_s <- return_rate_s <- return_val$rate_s
@@ -47,7 +47,7 @@ test_that("Birth gives expected outcomes", {
 
     are_heights_positive[i] <- all(return_rate_h >= 0)
     are_changepoints_increasing[i] <- all(diff(return_rate_s) > 0)
-    are_changepoints_inbounds[i] <- (
+    are_changepoints_bounds_correct[i] <- (
       (min(return_rate_s) == min(initial_rate_s)) &&
       (max(return_rate_s) == max(initial_rate_s))
     )
@@ -60,7 +60,7 @@ test_that("Birth gives expected outcomes", {
   expect_true( all(are_changepoints_increasing) )
 
   # Tests that keeps same initial and final changepoints
-  expect_true( all(are_changepoints_increasing) )
+  expect_true( all(are_changepoints_bounds_correct) )
 
   # Tests that number of height is always one less than number of changepoints
   expect_identical(n_changes - 1L, n_heights)
@@ -119,7 +119,7 @@ test_that("Birth gives same as legacy code", {
       prior_h_alpha = prior_h_alpha,
       prior_h_beta = prior_h_beta,
       prior_n_change_lambda = prior_n_change_lambda,
-      prop_birth_ratio = prop_birth_ratio)
+      proposal_ratio = prop_birth_ratio)
 
     rate_h <- return_rate_h <- return_val$rate_h
     rate_s <- return_rate_s <- return_val$rate_s

@@ -74,11 +74,17 @@
 
   # Determine acceptance and return result
   if(stats::runif(1) < hastings_ratio) {
-    # Accept and return modified changepoints
-    retlist <- list(rate_s = rate_s_new, integrated_rate = integrated_rate_new)
+    # Accept
+    retlist <- list(
+      rate_s = rate_s_new,
+      integrated_rate = integrated_rate_new,
+      hastings_ratio = hastings_ratio)
   } else {
-    # Else reject and return old changepoints
-    retlist <- list(rate_s = rate_s, integrated_rate = integrated_rate)
+    # Reject
+    retlist <- list(
+      rate_s = rate_s,
+      integrated_rate = integrated_rate,
+      hastings_ratio = hastings_ratio)
   }
   return(retlist)
 }
@@ -134,10 +140,16 @@
   hastings_ratio <- exp(log_prior_h_ratio + log_theta_lik_ratio)
 
   # Determine acceptance and return result
-  if(stats::runif(1) < hastings_ratio)	{
-    retlist <- list(rate_h = rate_h_new, integrated_rate = integrated_rate_new)	# Accept and return modified heights and intrate
-  }	else {
-    retlist <- list(rate_h = rate_h, integrated_rate = integrated_rate)	# Reject and return old heights and intrate
+  if(stats::runif(1) < hastings_ratio)	{ 	# Accept
+    retlist <- list(
+      rate_h = rate_h_new,
+      integrated_rate = integrated_rate_new,
+      hastings_ratio = hastings_ratio)
+  }	else { # Reject
+    retlist <- list(
+      rate_h = rate_h,
+      integrated_rate = integrated_rate,
+      hastings_ratio = hastings_ratio)
   }
   return(retlist)
 }
@@ -152,7 +164,7 @@
 # integrated_rate - integral_0^L nu(t) dt
 # prior_h_alpha, prior_h_beta - prior parameters on heights
 # prior_n_change_lambda - prior on number of changepoints n ~ Po(lambda)
-# prop_birth_ratio - proposal ratio for an additional changepoint
+# proposal_ratio - proposal ratio for an additional changepoint
 .Birth <- function(
     theta,
     rate_s,
@@ -161,7 +173,7 @@
     prior_h_alpha,
     prior_h_beta,
     prior_n_change_lambda,
-    prop_birth_ratio)
+    proposal_ratio)
 {
   n_changepoints <- length(rate_s)
   n_internal_changepoints <- n_changepoints - 2
@@ -231,33 +243,129 @@
   # Find acceptance probability
   hastings_ratio <- (
     exp(log_prior_num_change_ratio + log_theta_lik_ratio)
-    * (prior_spacing_ratio * prior_h_ratio * jacobian * prop_birth_ratio)
+    * (prior_spacing_ratio * prior_h_ratio * jacobian * proposal_ratio)
   )
 
   # Determine acceptance and return result
-  if(stats::runif(1) < hastings_ratio)	{
+  if(stats::runif(1) < hastings_ratio)	{ # Accept
     retlist <- list(
       rate_s = rate_s_new,
       rate_h = rate_h_new,
       integrated_rate = integrated_rate_new,
       hastings_ratio = hastings_ratio)
-    # Accept and return modified changepoints + heights
-  } else {
+  } else { # Reject
     retlist <- list(
       rate_s = rate_s,
       rate_h = rate_h,
       integrated_rate = integrated_rate,
-      hastings_ratio = hastings_ratio) # Else reject and return old heights
+      hastings_ratio = hastings_ratio)
   }
   return(retlist)
 }
 
 
 
+## Proposal 4: Killing a current changepoint
+# Arguments:
+# theta - the observed times (calendar ages) of the events
+# rate_s - the current changepoints in the rate
+# rate_h - the heights
+# integrated_rate - integral_0^L nu(t) dt
+# prior_h_alpha, prior_h_beta - prior parameters on heights
+# prior_n_change_lambda - prior on number of changepoints n ~ Po(lambda)
+# proposal_ratio - proposal ratio for an additional changepoint
+.Death <- function(
+    theta,
+    rate_s,
+    rate_h,
+    integrated_rate,
+    prior_h_alpha,
+    prior_h_beta,
+    prior_n_change_lambda,
+    proposal_ratio)
+{
+  n_changepoints <- length(rate_s)
+  n_internal_changepoints <- n_changepoints - 2
+
+  if(n_internal_changepoints <= 0) {
+    stop("Error: You have called death when there are no internal changepoints")
+  }
+
+  # Select changepoint to remove
+  j <- .resample(2:(n_changepoints-1), 1) # Care as 2:(ns-1) can be a single integer
+
+  # Create new height for interval s[j-1], s[j+1] via inverse of birth step
+  h_j_new <- exp(
+    1/(rate_s[j+1] - rate_s[j-1]) * (
+      (rate_s[j] - rate_s[j-1]) * log(rate_h[j-1]) + (rate_s[j+1]- rate_s[j]) * log(rate_h[j])
+    )
+  )
+
+  rate_s_new <- rate_s[-j]
+  rate_h_new <- append(rate_h[-c(j-1, j)], h_j_new, after = j-2) # Care as could change first/last element
+
+  # Find the prior ratio for dimension
+  log_prior_num_change_ratio <- (
+    stats::dpois(n_internal_changepoints - 1 , prior_n_change_lambda, log = TRUE)
+    - dpois(n_internal_changepoints, prior_n_change_lambda, log = TRUE)
+  )
+
+  prior_spacing_ratio <- (
+    (rate_s[n_changepoints] - rate_s[1])^2 / (2 * n_internal_changepoints
+                                              * (2*n_internal_changepoints+1) )
+    * (rate_s[j+1] - rate_s[j-1]) / ((rate_s[j+1] - rate_s[j]) * (rate_s[j] - rate_s[j-1]))
+  )
+
+  # Find the prior ratio for the heights NEED CARE WITH ROUNDING
+  prior_h_ratio <- (
+    (gamma(prior_h_alpha) / (prior_h_beta^prior_h_alpha)) / exp(
+      (prior_h_alpha - 1) * (log(rate_h[j]) + log(rate_h[j-1]) - log(h_j_new))
+          - prior_h_beta * (rate_h[j] + rate_h[j-1] - h_j_new))
+  )
+
+  jacobian <- h_j_new / ((rate_h[j-1] + rate_h[j])^2)
+
+  # Find likelihood of thetas
+  integrated_rate_adjustment <- (
+    ((h_j_new - rate_h[j-1]) * (rate_s[j] - rate_s[j-1]))
+    + ((h_j_new - rate_h[j]) * (rate_s[j+1] - rate_s[j]))
+  )
+  integrated_rate_new <- integrated_rate + integrated_rate_adjustment
+
+  n_theta_affected_A <- sum(theta <= rate_s[j] & theta > rate_s[j-1]) # in old will have rate h[j-1]
+  n_theta_affected_B <- sum(theta < rate_s[j+1] & theta > rate_s[j])  # in old will have rate h[j]
+
+  log_lik_old <- (n_theta_affected_A * log(rate_h[j-1])) + (n_theta_affected_B * log(rate_h[j]))  - integrated_rate # In old they have rate h[j-1] or h[j] dependent upon if after s[j]
+  log_lik_new <- ((n_theta_affected_A + n_theta_affected_B) * log(h_j_new)) - integrated_rate_new # In new all have rate h_j_new
+
+  log_theta_lik_ratio <- log_lik_new - log_lik_old
 
 
+  # Find acceptance probability
+  hastings_ratio <- (
+    exp(log_theta_lik_ratio + log_prior_num_change_ratio)
+    * (prior_spacing_ratio * prior_h_ratio * jacobian * proposal_ratio)
+  )
 
+  browser()
 
+  # Determine acceptance and return result
+  if(stats::runif(1) < hastings_ratio)	{ # Accept
+    retlist <- list(
+      rate_s = rate_s_new,
+      rate_h = rate_h_new,
+      integrated_rate = integrated_rate_new,
+      hastings_ratio = hastings_ratio)
+
+  } else { # Reject
+    retlist <- list(
+      rate_s = rate_s,
+      rate_h = rate_h,
+      integrated_rate = integrated_rate,
+      hastings_ratio = hastings_ratio)
+  }
+  return(retlist)
+}
 
 
 
