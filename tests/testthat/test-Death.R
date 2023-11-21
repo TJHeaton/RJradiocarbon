@@ -19,7 +19,7 @@ test_that("Death gives expected outcomes", {
   )
 
   # Create too many initial changepoints
-  initial_n_internal_change <- 3
+  initial_n_internal_change <- 300
   initial_rate_s <- sort(
     c(
       time_start,
@@ -30,7 +30,7 @@ test_that("Death gives expected outcomes", {
       )
     )
   initial_rate_h <- jitter(
-    rep(true_rate_h, initial_n_internal_change + 1),
+    rep(true_rate_h + 4, initial_n_internal_change + 1),
     amount = 10
   )
 
@@ -111,3 +111,6 @@ test_that("Death gives expected outcomes", {
   expect_true(all(diff(n_changes) == 0 | diff(n_changes) == (-1)))
 
 })
+
+# To write test of legacy death proposal
+# Seems to be an issue with prior_h_ratio in main code

@@ -347,8 +347,6 @@
     * (prior_spacing_ratio * prior_h_ratio * jacobian * proposal_ratio)
   )
 
-  browser()
-
   # Determine acceptance and return result
   if(stats::runif(1) < hastings_ratio)	{ # Accept
     retlist <- list(
