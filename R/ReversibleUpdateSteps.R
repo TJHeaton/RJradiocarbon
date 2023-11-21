@@ -188,8 +188,8 @@
 
   # Find the prior ratio for dimension
   log_prior_num_change_ratio <- (
-    dpois(n_internal_changepoints + 1, prior_n_change_lambda, log = TRUE)
-    - dpois(n_internal_changepoints, prior_n_change_lambda, log = TRUE)
+    stats::dpois(n_internal_changepoints + 1, prior_n_change_lambda, log = TRUE)
+    - stats::dpois(n_internal_changepoints, prior_n_change_lambda, log = TRUE)
   )
 
   prior_spacing_ratio <- (
@@ -235,21 +235,19 @@
   )
 
   # Determine acceptance and return result
-  if(runif(1) < hastings_ratio)	{
+  if(stats::runif(1) < hastings_ratio)	{
     retlist <- list(
       rate_s = rate_s_new,
       rate_h = rate_h_new,
       integrated_rate = integrated_rate_new,
-      hastings_ratio = hastings_ratio,
-      accept = TRUE)
+      hastings_ratio = hastings_ratio)
     # Accept and return modified changepoints + heights
   } else {
     retlist <- list(
       rate_s = rate_s,
       rate_h = rate_h,
       integrated_rate = integrated_rate,
-      hastings_ratio = hastings_ratio,
-      accept = FALSE) # Else reject and return old heights
+      hastings_ratio = hastings_ratio) # Else reject and return old heights
   }
   return(retlist)
 }
