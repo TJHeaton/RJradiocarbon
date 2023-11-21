@@ -169,6 +169,4 @@ test_that("Birth gives same as legacy code", {
   expect_identical(return_rate_h, final_rate_h_new)
   expect_identical(return_rate_s, final_rate_s_new)
 
-  browser()
-
 })
