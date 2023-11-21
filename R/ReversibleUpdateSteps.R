@@ -6,17 +6,18 @@
 
 ## Proposal 1: Alter the position of a randomly chosen internal changepoint
 # Arguments:
-# calendar_ages - the observed thetas
+# theta - the observed times (calendar ages) of the events
 # rate_s - the current changepoints in the rate
 # rate_h - the heights
 # integrated_rate - integral_0^L nu(t) dt
-.ChangePos <- function(calendar_ages,
-                       rate_s,
-                       rate_h,
-                       integrated_rate)
+.ChangePos <- function(
+    theta,
+    rate_s,
+    rate_h,
+    integrated_rate)
 {
   n_changepoints <- length(rate_s)
-  n_observations <- length(calendar_ages)
+  n_observations <- length(theta)
 
   if(n_changepoints < 3) stop("Internal Error (ChangePos): Proposed to move an internal changepoint when there are none")
 
@@ -44,7 +45,7 @@
   adjust_integral <- (rate_h[j] - rate_h[j - 1]) * (rate_s[j] - rate_s_new[j])
   integrated_rate_new <- integrated_rate + adjust_integral
 
-  # Find which calendar_ages will contribute to the likelihood ratio and find their log-likelihood
+  # Find which thetas will contribute to the likelihood ratio and find their log-likelihood
   if(rate_s_new[j] < rate_s[j]) { # Have shifted new changepoint towards t = 0
     # Find the range of cal ages in which the rate has changed
     min_sj <- rate_s_new[j]
@@ -61,15 +62,15 @@
     new_h_interval <- rate_h[j-1]
   }
 
-  # Number of calendar ages that have been affected by changepoint shift
-  n_calendar_ages_affected <- sum(calendar_ages > min_sj & calendar_ages < max_sj)
+  # Number of thetas that have been affected by changepoint shift
+  n_theta_affected <- sum(theta > min_sj & theta < max_sj)
 
-  log_lik_old <- (n_calendar_ages_affected * log(old_h_interval)) - integrated_rate
-  log_lik_new <- (n_calendar_ages_affected * log(new_h_interval)) - integrated_rate_new
-  calendar_ages_lik_ratio <- exp(log_lik_new - log_lik_old)
+  log_lik_old <- (n_theta_affected * log(old_h_interval)) - integrated_rate
+  log_lik_new <- (n_theta_affected * log(new_h_interval)) - integrated_rate_new
+  theta_lik_ratio <- exp(log_lik_new - log_lik_old)
 
   # Find acceptance probability
-  hastings_ratio <- calendar_ages_lik_ratio * prior_rate_s_ratio
+  hastings_ratio <- theta_lik_ratio * prior_rate_s_ratio
 
   # Determine acceptance and return result
   if(stats::runif(1) < hastings_ratio) {
@@ -86,22 +87,22 @@
 
 ## Proposal 2: Alter the height of a randomly chosen step
 # Arguments:
-# calendar_ages - the observed thetas
+# theta - the observed times (calendar ages) of the events
 # rate_s - the current changepoints in the rate
 # rate_h - the heights
 # integrated_rate - integral_0^L nu(t) dt
 # prior_h_alpha, prior_h_beta - prior parameters on heights
 # Heights h are drawn from Gamma(alpha, beta) distribution
 .ChangeHeight <- function(
-    calendar_ages,
+    theta,
     rate_s,
     rate_h,
     integrated_rate,
-    prior_alpha,
-    prior_beta)
+    prior_h_alpha,
+    prior_h_beta)
 {
   n_heights <- length(rate_h)
-  n_observations <- length(calendar_ages)
+  n_observations <- length(theta)
 
   # Select step height to alter - will change height between s[j] and s[j+1]
   j <- sample(n_heights, 1)
@@ -117,20 +118,20 @@
   rate_h_new[j] <- h_j_new
 
   # Find prior h ratio
-  log_prior_h_ratio <- (prior_alpha * u) - (prior_beta * (h_j_new - h_j_old))
+  log_prior_h_ratio <- (prior_h_alpha * u) - (prior_h_beta * (h_j_new - h_j_old))
 
   # Adjust the integrated rate to account for new height between s[j] and s[j+1]
   integrated_rate_new <- integrated_rate + (h_j_new - h_j_old)*(rate_s[j+1] - rate_s[j])
 
-  # Number of calendar ages that have been affected by changepoint shift
-  n_calendar_ages_affected <- sum(calendar_ages > rate_s[j] & calendar_ages < rate_s[j+1])
+  # Number of thetas that have been affected by changepoint shift
+  n_theta_affected <- sum(theta > rate_s[j] & theta < rate_s[j+1])
 
-  log_lik_old <- (n_calendar_ages_affected * log(h_j_old)) - integrated_rate # In old these have rate h_j_old
-  log_lik_new <- (n_calendar_ages_affected * log(h_j_new)) - integrated_rate_new # In new they have rate h_j_new
-  log_calendar_lik_ratio <- log_lik_new - log_lik_old
+  log_lik_old <- (n_theta_affected * log(h_j_old)) - integrated_rate # In old these have rate h_j_old
+  log_lik_new <- (n_theta_affected * log(h_j_new)) - integrated_rate_new # In new they have rate h_j_new
+  log_theta_lik_ratio <- log_lik_new - log_lik_old
 
   # Find acceptance probability (use log rather than multiply as logphratio is simple format)
-  hastings_ratio <- exp(log_prior_h_ratio + log_calendar_lik_ratio)
+  hastings_ratio <- exp(log_prior_h_ratio + log_theta_lik_ratio)
 
   # Determine acceptance and return result
   if(stats::runif(1) < hastings_ratio)	{
@@ -142,6 +143,116 @@
 }
 
 
+
+## Proposal 3: Giving birth to a new changepoint
+# Arguments:
+# theta - the observed times (calendar ages) of the events
+# rate_s - the current changepoints in the rate
+# rate_h - the heights
+# integrated_rate - integral_0^L nu(t) dt
+# prior_h_alpha, prior_h_beta - prior parameters on heights
+# prior_n_change_lambda - prior on number of changepoints n ~ Po(lambda)
+# prop_birth_ratio - proposal ratio for an additional changepoint
+.Birth <- function(
+    theta,
+    rate_s,
+    rate_h,
+    integrated_rate,
+    prior_h_alpha,
+    prior_h_beta,
+    prior_n_change_lambda,
+    prop_birth_ratio)
+{
+  n_changepoints <- length(rate_s)
+  n_internal_changepoints <- n_changepoints - 2
+
+  # Propose new changepoint
+  s_star <- stats::runif(1, min = rate_s[1], max = rate_s[n_changepoints])
+
+  # Find which interval it falls into
+  j <- max(which(rate_s < s_star)) # Don't need to worry about boundary
+
+  # Current rate height between s_j and s_{j+1}
+  h_j_old <- rate_h[j]
+
+  # Sample u = U[0,1] and adjust heights
+  u <- stats::runif(1)
+  h_A_new <- h_j_old * (u/(1-u))^((rate_s[j+1]- s_star)/(rate_s[j+1] - rate_s[j]))
+  h_B_new <- h_A_new * (1-u) / u
+
+  # Create new changepoint and height vectors in sorted order
+  rate_s_new <- c(rate_s[1:j], s_star, rate_s[(j+1):n_changepoints])
+  # No care as no change to first/last element i.e. j = 1, ns -1
+  rate_h_new <- append(rate_h[-j], c(h_A_new, h_B_new), after = j-1)
+  # Care as could change first or last elements
+
+  # Find the prior ratio for dimension
+  log_prior_num_change_ratio <- (
+    dpois(n_internal_changepoints + 1, prior_n_change_lambda, log = TRUE)
+    - dpois(n_internal_changepoints, prior_n_change_lambda, log = TRUE)
+  )
+
+  prior_spacing_ratio <- (
+    (
+      2 * (n_internal_changepoints + 1)
+      * (2 * n_internal_changepoints + 3) / (rate_s[n_changepoints] - rate_s[1])^2
+    )
+    * (s_star - rate_s[j]) * (rate_s[j+1] - s_star) / (rate_s[j+1] - rate_s[j])
+  )
+
+  # Find the prior ratio for the heights NEED CARE WITH ROUNDING
+  prior_h_ratio <- (
+    (
+      (prior_h_beta ^ prior_h_alpha) / gamma(prior_h_alpha)
+    )
+    * exp(
+      (prior_h_alpha-1)*(log(h_A_new)+log(h_B_new)-log(h_j_old))
+      - prior_h_beta*(h_A_new + h_B_new - h_j_old)
+    )
+  )
+
+  jacobian <- (h_A_new + h_B_new)^2 / h_j_old
+
+  # Find the likelihood of thetas
+  integrated_rate_adjustment <- (
+    ((h_A_new - h_j_old) * (s_star - rate_s[j]))
+    + ((h_B_new - h_j_old) * (rate_s[j+1] - s_star))
+  )
+  integrated_rate_new <- integrated_rate + integrated_rate_adjustment
+
+  n_theta_affected_A <- sum(theta <= s_star & theta > rate_s[j])
+  n_theta_affected_B <- sum(theta < rate_s[j+1] & theta > s_star)
+
+  log_lik_old <- ((n_theta_affected_A + n_theta_affected_B) * log(h_j_old)) - integrated_rate # All have rate h_j_old
+  log_lik_new <- (n_theta_affected_A * log(h_A_new)) + (n_theta_affected_B * log(h_B_new)) - integrated_rate_new # In new have rate h_A_new or h_B_new dependent upon if after sstar
+
+  log_theta_lik_ratio <- log_lik_new - log_lik_old
+
+  # Find acceptance probability
+  hastings_ratio <- (
+    exp(log_prior_num_change_ratio + log_theta_lik_ratio)
+    * (prior_spacing_ratio * prior_h_ratio * jacobian * prop_birth_ratio)
+  )
+
+  # Determine acceptance and return result
+  if(runif(1) < hastings_ratio)	{
+    retlist <- list(
+      rate_s = rate_s_new,
+      rate_h = rate_h_new,
+      integrated_rate = integrated_rate_new,
+      hastings_ratio = hastings_ratio,
+      accept = TRUE)
+    # Accept and return modified changepoints + heights
+  } else {
+    retlist <- list(
+      rate_s = rate_s,
+      rate_h = rate_h,
+      integrated_rate = integrated_rate,
+      hastings_ratio = hastings_ratio,
+      accept = FALSE) # Else reject and return old heights
+  }
+  return(retlist)
+}
 
 
 

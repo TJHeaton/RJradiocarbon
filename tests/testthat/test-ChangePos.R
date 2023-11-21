@@ -15,7 +15,7 @@ test_that("ChangePos gives expected outcomes", {
 
   for(i in 1:1000) {
     return_val <- .ChangePos(
-      calendar_ages = calendar_ages,
+      theta = calendar_ages,
       rate_s = rate_s,
       rate_h = rate_h,
       integrated_rate = integrated_rate)
@@ -69,7 +69,7 @@ test_that("ChangePos gives same as legacy code", {
   set.seed(11)
   for(i in 1:1000) {
     return_val <- .ChangePos(
-      calendar_ages = calendar_ages,
+      theta = calendar_ages,
       rate_s = rate_s,
       rate_h = rate_h,
       integrated_rate = integrated_rate)

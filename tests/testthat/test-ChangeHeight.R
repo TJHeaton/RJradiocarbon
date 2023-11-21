@@ -7,8 +7,8 @@ test_that("ChangeHeight gives expected outcomes", {
   integrated_rate <- .FindIntegral(
     initial_rate_s,
     initial_rate_h)
-  prior_alpha <- 1
-  prior_beta <- 100
+  prior_h_alpha <- 1
+  prior_h_beta <- 100
 
   calendar_ages <- stats::runif(
     200,
@@ -17,12 +17,12 @@ test_that("ChangeHeight gives expected outcomes", {
 
   for(i in 1:1000) {
     return_val <- .ChangeHeight(
-      calendar_ages = calendar_ages,
+      theta = calendar_ages,
       rate_s = rate_s,
       rate_h = rate_h,
       integrated_rate = integrated_rate,
-      prior_alpha = prior_alpha,
-      prior_beta = prior_beta)
+      prior_h_alpha = prior_h_alpha,
+      prior_h_beta = prior_h_beta)
 
     rate_h <- return_rate_h <- return_val$rate_h
     integrated_rate <- return_integrated_rate <- return_val$integrated_rate
@@ -59,8 +59,8 @@ test_that("ChangeHeight gives same as legacy code", {
   initial_integrated_rate <- integrated_rate <- .FindIntegral(
     initial_rate_s,
     initial_rate_h)
-  prior_alpha <- 1
-  prior_beta <- 100
+  prior_h_alpha <- 1
+  prior_h_beta <- 100
 
   calendar_ages <- stats::runif(
     200,
@@ -70,12 +70,12 @@ test_that("ChangeHeight gives same as legacy code", {
   set.seed(11)
   for(i in 1:1000) {
     return_val <- .ChangeHeight(
-      calendar_ages = calendar_ages,
+      theta = calendar_ages,
       rate_s = rate_s,
       rate_h = rate_h,
       integrated_rate = integrated_rate,
-      prior_alpha = prior_alpha,
-      prior_beta = prior_beta)
+      prior_h_alpha = prior_h_alpha,
+      prior_h_beta = prior_h_beta)
 
     rate_h <- revised_rate_h <- return_val$rate_h
     integrated_rate <- revised_integrated_rate <- return_val$integrated_rate
@@ -93,8 +93,8 @@ test_that("ChangeHeight gives same as legacy code", {
       s = rate_s,
       h = rate_h,
       intrate = integrated_rate,
-      alpha = prior_alpha,
-      beta = prior_beta)
+      alpha = prior_h_alpha,
+      beta = prior_h_beta)
 
     rate_h <- legacy_rate_h <- return_val$h
     integrated_rate <- legacy_integrated_rate <- return_val$intrate
