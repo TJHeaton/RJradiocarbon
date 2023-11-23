@@ -115,9 +115,6 @@ test_that("Death gives expected outcomes", {
 
   # That each running either increases or keeps number changepoints the same
   expect_true(all(diff(n_changes) == 0 | diff(n_changes) == (-1)))
-
-
-  browser()
 })
 
 # To write test of legacy death proposal
