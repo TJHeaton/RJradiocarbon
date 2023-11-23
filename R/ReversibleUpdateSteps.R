@@ -4,6 +4,7 @@
 ## 3: Remove a changepoint
 ## 4: Add a changepoint
 
+
 ## Proposal 1: Alter the position of a randomly chosen internal changepoint
 # Arguments:
 # theta - the observed times (calendar ages) of the events
@@ -17,24 +18,23 @@
     integrated_rate)
 {
   n_changepoints <- length(rate_s)
-  n_observations <- length(theta)
 
-  if(n_changepoints < 3) stop("Internal Error (ChangePos): Proposed to move an internal changepoint when there are none")
+  if(n_changepoints < 3) {
+    stop("Internal Error (ChangePos): Proposed to move an internal changepoint when there are none")
+  }
 
   # Select internal changepoint to move at random
   j <- .resample(2:(n_changepoints-1), 1)
-  # Special sample function as may pass single integer to pick from
-  # [base function sample() would then pick from 1:j which is not correct]
 
   # Propose new changepoint position
   rate_s_new <- rate_s
   rate_s_new[j] <- stats::runif(1, min = rate_s[j - 1], max = rate_s[j + 1])
 
   # Find prior ratio for rate s
-  prior_rate_s_new   <- ((rate_s_new[j + 1] - rate_s_new[j])
-                             * (rate_s_new[j] - rate_s_new[j - 1]))
-  prior_rate_s_old <- ((rate_s[j + 1] - rate_s[j])
-                             * (rate_s[j] - rate_s[j - 1]))
+  prior_rate_s_new   <- (
+    (rate_s_new[j + 1] - rate_s_new[j]) * (rate_s_new[j] - rate_s_new[j - 1]))
+  prior_rate_s_old <- (
+    (rate_s[j + 1] - rate_s[j]) * (rate_s[j] - rate_s[j - 1]))
 
   prior_rate_s_ratio <- prior_rate_s_new / prior_rate_s_old
 
@@ -90,7 +90,6 @@
 }
 
 
-
 ## Proposal 2: Alter the height of a randomly chosen step
 # Arguments:
 # theta - the observed times (calendar ages) of the events
@@ -108,7 +107,6 @@
     prior_h_beta)
 {
   n_heights <- length(rate_h)
-  n_observations <- length(theta)
 
   # Select step height to alter - will change height between s[j] and s[j+1]
   j <- sample(n_heights, 1)
@@ -153,7 +151,6 @@
   }
   return(retlist)
 }
-
 
 
 ## Proposal 3: Giving birth to a new changepoint
@@ -264,7 +261,6 @@
 }
 
 
-
 ## Proposal 4: Killing a current changepoint
 # Arguments:
 # theta - the observed times (calendar ages) of the events
@@ -318,9 +314,11 @@
 
   # Find the prior ratio for the heights NEED CARE WITH ROUNDING
   prior_h_ratio <- (
-    (gamma(prior_h_alpha) / (prior_h_beta^prior_h_alpha)) / exp(
+    (gamma(prior_h_alpha) / (prior_h_beta^prior_h_alpha))
+    / exp(
       (prior_h_alpha - 1) * (log(rate_h[j]) + log(rate_h[j-1]) - log(h_j_new))
-          - prior_h_beta * (rate_h[j] + rate_h[j-1] - h_j_new))
+          - prior_h_beta * (rate_h[j] + rate_h[j-1] - h_j_new)
+    )
   )
 
   jacobian <- h_j_new / ((rate_h[j-1] + rate_h[j])^2)
@@ -364,12 +362,6 @@
   }
   return(retlist)
 }
-
-
-
-
-
-
 
 # Small function which performs sampling as we want it to
 # We need to take care with using the sample command as sometimes we pass a single integer j.
