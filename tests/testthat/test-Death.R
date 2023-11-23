@@ -30,8 +30,8 @@ test_that("Death gives expected outcomes", {
       )
     )
   initial_rate_h <- jitter(
-    rep(true_rate_h + 4, initial_n_internal_change + 1),
-    amount = 10
+    rep(true_rate_h, initial_n_internal_change + 1),
+    amount = 2
   )
 
   # Test death step with initial values
@@ -41,8 +41,8 @@ test_that("Death gives expected outcomes", {
   integrated_rate <- .FindIntegral(
     rate_s,
     rate_h)
-  prior_h_alpha <- 1
-  prior_h_beta <- 100
+  prior_h_alpha <- 20
+  prior_h_beta <- 1
   prior_n_change_lambda <- 60
   proposal_ratio <- 0.1
 
@@ -110,6 +110,8 @@ test_that("Death gives expected outcomes", {
   # That each running either increases or keeps number changepoints the same
   expect_true(all(diff(n_changes) == 0 | diff(n_changes) == (-1)))
 
+
+  browser()
 })
 
 # To write test of legacy death proposal

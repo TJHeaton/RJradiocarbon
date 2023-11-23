@@ -7,8 +7,8 @@ test_that("Birth gives expected outcomes", {
   integrated_rate <- .FindIntegral(
     initial_rate_s,
     initial_rate_h)
-  prior_h_alpha <- 1
-  prior_h_beta <- 100
+  prior_h_alpha <- 4
+  prior_h_beta <- 1
   prior_n_change_lambda <- 1000
   prop_birth_ratio <- 0.1
 
