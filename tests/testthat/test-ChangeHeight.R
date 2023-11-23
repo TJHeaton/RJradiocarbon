@@ -1,17 +1,24 @@
 test_that("ChangeHeight gives expected outcomes", {
 
   set.seed(14)
+
   rate_s <- initial_rate_s <- c(0, 2, 5, 7, 10)
   rate_h <- initial_rate_h <- c(5, 2, 4, 6)
+
+  # Choose sensible prior on h
+  # Prior mean matches mean of rate_h
+  prior_h_shape <- 0.1 * mean(rate_h)
+  prior_h_rate <- 0.1 # Bit disperse
+
   n_heights <- length(rate_h)
   integrated_rate <- .FindIntegral(
     initial_rate_s,
     initial_rate_h)
-  prior_h_alpha <- 1
-  prior_h_beta <- 100
+
+  n_theta <- 2 * integrated_rate # Double expected number
 
   calendar_ages <- stats::runif(
-    200,
+    n_theta,
     min = min(initial_rate_s),
     max = max(initial_rate_s))
 
@@ -21,8 +28,8 @@ test_that("ChangeHeight gives expected outcomes", {
       rate_s = rate_s,
       rate_h = rate_h,
       integrated_rate = integrated_rate,
-      prior_h_alpha = prior_h_alpha,
-      prior_h_beta = prior_h_beta)
+      prior_h_shape = prior_h_shape,
+      prior_h_rate = prior_h_rate)
 
     rate_h <- return_rate_h <- return_val$rate_h
     integrated_rate <- return_integrated_rate <- return_val$integrated_rate
@@ -55,15 +62,21 @@ test_that("ChangeHeight gives same as legacy code", {
   set.seed(14)
   rate_s <- initial_rate_s <- c(0, 2, 5, 7, 10)
   rate_h <- initial_rate_h <- c(5, 2, 4, 6)
+
+  # Choose sensible prior on h
+  # Prior mean matches mean of rate_h
+  prior_h_shape <- 0.1 * mean(rate_h)
+  prior_h_rate <- 0.1 # Var = 10 * mean(h) disperse
+
   n_heights <- length(rate_h)
-  initial_integrated_rate <- integrated_rate <- .FindIntegral(
+  integrated_rate <- initial_integrated_rate <- .FindIntegral(
     initial_rate_s,
     initial_rate_h)
-  prior_h_alpha <- 1
-  prior_h_beta <- 100
+
+  n_theta <- 2 * integrated_rate # Double expected number
 
   calendar_ages <- stats::runif(
-    200,
+    n_theta,
     min = min(initial_rate_s),
     max = max(initial_rate_s))
 
@@ -74,8 +87,8 @@ test_that("ChangeHeight gives same as legacy code", {
       rate_s = rate_s,
       rate_h = rate_h,
       integrated_rate = integrated_rate,
-      prior_h_alpha = prior_h_alpha,
-      prior_h_beta = prior_h_beta)
+      prior_h_shape = prior_h_shape,
+      prior_h_rate = prior_h_rate)
 
     rate_h <- revised_rate_h <- return_val$rate_h
     integrated_rate <- revised_integrated_rate <- return_val$integrated_rate
@@ -87,14 +100,15 @@ test_that("ChangeHeight gives same as legacy code", {
   rate_h <- initial_rate_h
   rate_s <- initial_rate_s
   integrated_rate <- initial_integrated_rate
+
   for(i in 1:1000) {
     return_val <- LegacyChangeHe(
       th = calendar_ages,
       s = rate_s,
       h = rate_h,
       intrate = integrated_rate,
-      alpha = prior_h_alpha,
-      beta = prior_h_beta)
+      alpha = prior_h_shape,
+      beta = prior_h_rate)
 
     rate_h <- legacy_rate_h <- return_val$h
     integrated_rate <- legacy_integrated_rate <- return_val$intrate

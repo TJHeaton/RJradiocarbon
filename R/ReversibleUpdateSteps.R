@@ -97,15 +97,15 @@
 # rate_s - the current changepoints in the rate
 # rate_h - the heights
 # integrated_rate - integral_0^L nu(t) dt
-# prior_h_alpha, prior_h_beta - prior parameters on heights
+# prior_h_shape, prior_h_rate - prior parameters on heights h ~ Gamma(shape, rate)
 # Heights h are drawn from Gamma(alpha, beta) distribution
 .ChangeHeight <- function(
     theta,
     rate_s,
     rate_h,
     integrated_rate,
-    prior_h_alpha,
-    prior_h_beta)
+    prior_h_shape,
+    prior_h_rate)
 {
   n_heights <- length(rate_h)
   n_observations <- length(theta)
@@ -124,7 +124,7 @@
   rate_h_new[j] <- h_j_new
 
   # Find prior h ratio
-  log_prior_h_ratio <- (prior_h_alpha * u) - (prior_h_beta * (h_j_new - h_j_old))
+  log_prior_h_ratio <- (prior_h_shape * u) - (prior_h_rate * (h_j_new - h_j_old))
 
   # Adjust the integrated rate to account for new height between s[j] and s[j+1]
   integrated_rate_new <- integrated_rate + (h_j_new - h_j_old)*(rate_s[j+1] - rate_s[j])
@@ -162,7 +162,7 @@
 # rate_s - the current changepoints in the rate
 # rate_h - the heights
 # integrated_rate - integral_0^L nu(t) dt
-# prior_h_alpha, prior_h_beta - prior parameters on heights
+# prior_h_shape, prior_h_rate - prior parameters on heights h ~ Gamma(shape, rate)
 # prior_n_change_lambda - prior on number of changepoints n ~ Po(lambda)
 # proposal_ratio - proposal ratio for an additional changepoint
 .Birth <- function(
@@ -170,8 +170,8 @@
     rate_s,
     rate_h,
     integrated_rate,
-    prior_h_alpha,
-    prior_h_beta,
+    prior_h_shape,
+    prior_h_rate,
     prior_n_change_lambda,
     proposal_ratio)
 {
@@ -215,11 +215,11 @@
   # Find the prior ratio for the heights NEED CARE WITH ROUNDING
   prior_h_ratio <- (
     (
-      (prior_h_beta ^ prior_h_alpha) / gamma(prior_h_alpha)
+      (prior_h_rate ^ prior_h_shape) / gamma(prior_h_shape)
     )
     * exp(
-      (prior_h_alpha-1)*(log(h_A_new)+log(h_B_new)-log(h_j_old))
-      - prior_h_beta*(h_A_new + h_B_new - h_j_old)
+      (prior_h_shape-1)*(log(h_A_new)+log(h_B_new)-log(h_j_old))
+      - prior_h_rate*(h_A_new + h_B_new - h_j_old)
     )
   )
 
@@ -271,7 +271,7 @@
 # rate_s - the current changepoints in the rate
 # rate_h - the heights
 # integrated_rate - integral_0^L nu(t) dt
-# prior_h_alpha, prior_h_beta - prior parameters on heights
+# prior_h_shape, prior_h_rate - prior parameters on heights h ~ Gamma(shape, rate)
 # prior_n_change_lambda - prior on number of changepoints n ~ Po(lambda)
 # proposal_ratio - proposal ratio for an additional changepoint
 .Death <- function(
@@ -279,8 +279,8 @@
     rate_s,
     rate_h,
     integrated_rate,
-    prior_h_alpha,
-    prior_h_beta,
+    prior_h_shape,
+    prior_h_rate,
     prior_n_change_lambda,
     proposal_ratio)
 {
@@ -318,9 +318,9 @@
 
   # Find the prior ratio for the heights NEED CARE WITH ROUNDING
   prior_h_ratio <- (
-    (gamma(prior_h_alpha) / (prior_h_beta^prior_h_alpha)) / exp(
-      (prior_h_alpha - 1) * (log(rate_h[j]) + log(rate_h[j-1]) - log(h_j_new))
-          - prior_h_beta * (rate_h[j] + rate_h[j-1] - h_j_new))
+    (gamma(prior_h_shape) / (prior_h_rate^prior_h_shape)) / exp(
+      (prior_h_shape - 1) * (log(rate_h[j]) + log(rate_h[j-1]) - log(h_j_new))
+          - prior_h_rate * (rate_h[j] + rate_h[j-1] - h_j_new))
   )
 
   jacobian <- h_j_new / ((rate_h[j-1] + rate_h[j])^2)
