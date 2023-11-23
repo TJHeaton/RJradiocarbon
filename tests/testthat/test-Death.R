@@ -8,12 +8,22 @@ test_that("Death gives expected outcomes", {
   true_rate_s <- c(time_start , time_end)
   true_rate_h <- 20
 
+  # Choose sensible prior on h
+  # Prior mean matches mean of rate_h
+  prior_h_shape <- 0.1 * mean(true_rate_h)
+  prior_h_rate <- 0.1 # Bit disperse
+
+  prior_n_change_lambda <- 60
+  proposal_ratio <- 0.1
+
   true_integrated_rate <- .FindIntegral(
     true_rate_s,
     true_rate_h)
 
+  n_theta <- 2 * true_integrated_rate # Double expected number
+
   calendar_ages <- stats::runif(
-    n = true_integrated_rate,
+    n = n_theta,
     min = time_start,
     max = time_end
   )
@@ -41,10 +51,6 @@ test_that("Death gives expected outcomes", {
   integrated_rate <- .FindIntegral(
     rate_s,
     rate_h)
-  prior_h_alpha <- 20
-  prior_h_beta <- 1
-  prior_n_change_lambda <- 60
-  proposal_ratio <- 0.1
 
   n_iters <- initial_n_internal_change - 1
 
@@ -63,8 +69,8 @@ test_that("Death gives expected outcomes", {
       rate_s = rate_s,
       rate_h = rate_h,
       integrated_rate = integrated_rate,
-      prior_h_alpha = prior_h_alpha,
-      prior_h_beta = prior_h_beta,
+      prior_h_shape = prior_h_shape,
+      prior_h_rate = prior_h_rate,
       prior_n_change_lambda = prior_n_change_lambda,
       proposal_ratio = proposal_ratio)
 

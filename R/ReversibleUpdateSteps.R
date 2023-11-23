@@ -314,10 +314,10 @@
 
   # Find the prior ratio for the heights NEED CARE WITH ROUNDING
   prior_h_ratio <- (
-    (gamma(prior_h_alpha) / (prior_h_beta^prior_h_alpha))
+    (gamma(prior_h_shape) / (prior_h_rate^prior_h_shape))
     / exp(
-      (prior_h_alpha - 1) * (log(rate_h[j]) + log(rate_h[j-1]) - log(h_j_new))
-          - prior_h_beta * (rate_h[j] + rate_h[j-1] - h_j_new)
+      (prior_h_shape - 1) * (log(rate_h[j]) + log(rate_h[j-1]) - log(h_j_new))
+          - prior_h_rate * (rate_h[j] + rate_h[j-1] - h_j_new)
     )
   )
 

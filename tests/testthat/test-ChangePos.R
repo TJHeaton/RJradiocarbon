@@ -8,8 +8,10 @@ test_that("ChangePos gives expected outcomes", {
     initial_rate_s,
     initial_rate_h)
 
+  n_theta <- 2 * integrated_rate # Double expected number
+
   calendar_ages <- stats::runif(
-    200,
+    n_theta,
     min = min(initial_rate_s),
     max = max(initial_rate_s))
 
@@ -61,8 +63,10 @@ test_that("ChangePos gives same as legacy code", {
     initial_rate_s,
     initial_rate_h)
 
+  n_theta <- 2 * integrated_rate # Double expected number
+
   calendar_ages <- stats::runif(
-    200,
+    n_theta,
     min = min(initial_rate_s),
     max = max(initial_rate_s))
 

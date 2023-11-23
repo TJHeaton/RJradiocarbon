@@ -1,21 +1,36 @@
 test_that("Birth gives expected outcomes", {
 
   set.seed(14)
-  rate_s <- initial_rate_s <- c(0, 5, 10)
-  rate_h <- initial_rate_h <- c(5, 2)
-  n_heights <- length(rate_h)
-  integrated_rate <- .FindIntegral(
+
+  # Set some true values for simulation of theta
+  time_start <- 0
+  time_end <- 10
+
+  prior_h_shape <- 20
+  prior_h_rate <- 1
+  prior_n_change_lambda <- 1
+  proposal_ratio <- 0.1
+
+  true_mean_h <- prior_h_shape/prior_h_rate
+
+  initial_rate_s <- c(time_start, time_end)
+  initial_rate_h <- true_mean_h
+
+  initial_integrated_rate <- .FindIntegral(
     initial_rate_s,
     initial_rate_h)
-  prior_h_alpha <- 4
-  prior_h_beta <- 1
-  prior_n_change_lambda <- 1000
-  prop_birth_ratio <- 0.1
 
+  # Sample uniformly
+  n_theta <- initial_integrated_rate
   calendar_ages <- stats::runif(
-    200,
+    n = n_theta,
     min = min(initial_rate_s),
     max = max(initial_rate_s))
+
+  # Set starting rate
+  rate_s <- initial_rate_s
+  rate_h <- initial_rate_h
+  integrated_rate <- initial_integrated_rate
 
   n_iters <- 10000
 
@@ -33,10 +48,10 @@ test_that("Birth gives expected outcomes", {
       rate_s = rate_s,
       rate_h = rate_h,
       integrated_rate = integrated_rate,
-      prior_h_alpha = prior_h_alpha,
-      prior_h_beta = prior_h_beta,
+      prior_h_shape = prior_h_shape,
+      prior_h_rate = prior_h_rate,
       prior_n_change_lambda = prior_n_change_lambda,
-      proposal_ratio = prop_birth_ratio)
+      proposal_ratio = proposal_ratio)
 
     rate_h <- return_rate_h <- return_val$rate_h
     rate_s <- return_rate_s <- return_val$rate_s
@@ -87,26 +102,40 @@ test_that("Birth gives expected outcomes", {
 test_that("Birth gives same as legacy code", {
 
   set.seed(14)
-  rate_s <- initial_rate_s <- c(0, 5, 10)
-  rate_h <- initial_rate_h <- c(5, 2)
-  n_heights <- length(rate_h)
-  integrated_rate <- initial_integrated_rate <- .FindIntegral(
+
+  # Set some true values for simulation of theta
+  time_start <- 0
+  time_end <- 10
+
+  prior_h_shape <- 20
+  prior_h_rate <- 1
+  prior_n_change_lambda <- 1
+  proposal_ratio <- 0.1
+
+  true_mean_h <- prior_h_shape/prior_h_rate
+
+  initial_rate_s <- c(time_start, time_end)
+  initial_rate_h <- true_mean_h
+
+  initial_integrated_rate <- .FindIntegral(
     initial_rate_s,
     initial_rate_h)
-  prior_h_alpha <- 1
-  prior_h_beta <- 100
-  prior_n_change_lambda <- 1000
-  prop_birth_ratio <- 0.1
 
+  # Sample uniformly
+  n_theta <- initial_integrated_rate
   calendar_ages <- stats::runif(
-    200,
+    n = n_theta,
     min = min(initial_rate_s),
     max = max(initial_rate_s))
+
+  # Set starting rate
+  rate_s <- initial_rate_s
+  rate_h <- initial_rate_h
+  integrated_rate <- initial_integrated_rate
 
   n_iters <- 10000
   hastings_ratio_new <- rep(NA, n_iters)
   hastings_ratio_legacy <- rep(NA, n_iters)
-
 
   # New code
   set.seed(11)
@@ -116,10 +145,10 @@ test_that("Birth gives same as legacy code", {
       rate_s = rate_s,
       rate_h = rate_h,
       integrated_rate = integrated_rate,
-      prior_h_alpha = prior_h_alpha,
-      prior_h_beta = prior_h_beta,
+      prior_h_shape = prior_h_shape,
+      prior_h_rate = prior_h_rate,
       prior_n_change_lambda = prior_n_change_lambda,
-      proposal_ratio = prop_birth_ratio)
+      proposal_ratio = proposal_ratio)
 
     rate_h <- return_rate_h <- return_val$rate_h
     rate_s <- return_rate_s <- return_val$rate_s
@@ -147,10 +176,10 @@ test_that("Birth gives same as legacy code", {
       s = rate_s,
       h = rate_h,
       intrate = integrated_rate,
-      alpha = prior_h_alpha,
-      beta = prior_h_beta,
+      alpha = prior_h_shape,
+      beta = prior_h_rate,
       lambda = prior_n_change_lambda,
-      propratio = prop_birth_ratio)
+      propratio = proposal_ratio)
 
     previous_n_change <- length(rate_h)
     rate_h <- return_rate_h <- return_val$h
