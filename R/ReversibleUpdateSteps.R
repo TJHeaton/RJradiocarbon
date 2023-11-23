@@ -268,7 +268,7 @@
 # rate_h - the heights
 # integrated_rate - integral_0^L nu(t) dt
 # prior_h_shape, prior_h_rate - prior parameters on heights h ~ Gamma(shape, rate)
-# prior_n_change_lambda - prior on number of changepoints n ~ Po(lambda)
+# prior_n_change_lambda - prior on number of internal changepoints n ~ Po(lambda)
 # proposal_ratio - proposal ratio for an additional changepoint
 .Death <- function(
     theta,
