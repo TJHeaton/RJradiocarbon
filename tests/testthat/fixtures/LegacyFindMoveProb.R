@@ -3,7 +3,7 @@
 # Note we use the number of heights to avoid confusion as to the fact that sometimes nk = 0 and S does not naturally create vectors with index p[0]
 # Also note that nk = nh - 1
 
-FindMoveProb <- function(lambda, kmax)
+LegacyFindMoveProb <- function(lambda, kmax)
 {
   pMovePos <- rep(NA, length = kmax + 1)
   pMoveHe <- rep(NA, length = kmax + 1)

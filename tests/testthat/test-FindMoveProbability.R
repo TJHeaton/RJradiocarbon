@@ -30,7 +30,7 @@ test_that("FindMoveProbability gives same as legacy code", {
     rescale_factor = 0.9)
 
   source(test_path("fixtures", "LegacyFindMoveProb.R"))
-  legacy_prob_move <- FindMoveProb(
+  legacy_prob_move <- LegacyFindMoveProb(
     lambda = prior_n_change_lambda,
     kmax = k_max_changes)
 
