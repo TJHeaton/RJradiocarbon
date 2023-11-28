@@ -1,6 +1,8 @@
 ## Proposal 4: Kill a current changepoint
 LegacyDeath <- function(th, s, h, intrate, alpha, beta, lambda, propratio)
 {
+  source(test_path("fixtures", "LegacyHelpers.R"))
+
   ns <- length(s)
   k <- ns - 2
   # Select a changepoint to remove

@@ -6,6 +6,8 @@
 # intrate - integral_0^L  nu(t) dt
 LegacyChangePos <- function(th, s, h, intrate)
 {
+  source(test_path("fixtures", "LegacyHelpers.R"))
+
   ns <- length(s)
   nth <- length(th)
 
@@ -56,19 +58,5 @@ LegacyChangePos <- function(th, s, h, intrate)
     retlist <- list(s = s, intrate = intrate) # Else reject and return old changepoints and intrate
   }
   return(retlist)
-}
-
-
-# Small function which performs sampling as we want it to
-# We need to take care with using the sample command as sometimes we pass a single integer j.
-# If we use sample() then we will draw from 1:j which is not what we want
-# This resample function will stop this happening
-resample <- function(x, size, ...)
-{
-  if(length(x) <= 1) {
-    if(!missing(size) && size == 0) x[FALSE]
-    else x
-  }
-  else sample(x, size, ...)
 }
 
