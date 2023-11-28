@@ -303,7 +303,7 @@
   # Find the prior ratio for dimension
   log_prior_num_change_ratio <- (
     stats::dpois(n_internal_changepoints - 1 , prior_n_change_lambda, log = TRUE)
-    - dpois(n_internal_changepoints, prior_n_change_lambda, log = TRUE)
+    - stats::dpois(n_internal_changepoints, prior_n_change_lambda, log = TRUE)
   )
 
   prior_spacing_ratio <- (
@@ -364,11 +364,11 @@
 }
 
 ### .FindMoveProbability
-# This function will work out the probabilities for each move in the RJ MCMC sampler
-# Return 4 vectors in list with each move probability for number of heights h = 1,..., kmax+1
-# Note: Uses number of heights to avoid confusion as to the fact that sometimes nk = 0
-# and R does not naturally create vectors with index p[0]
-# Note that nk = nh - 1 (i.e. n_internal_changepoints = n_heights - 1)
+# Work out the probabilities for each move in the RJ MCMC sampler
+# Return 4 vectors in list with each move probability for current n_heights = 1,..., kmax+1
+# Note: Uses number of heights to avoid confusion as sometimes nk = 0
+# and R does not create vectors with index p[0]
+# Note: nk = nh - 1 (i.e. n_internal_changepoints = n_heights - 1)
 # Arguments:
 # prior_n_change_lambda - prior mean on number of changepoints
 # k_max_changes - maximum number of changepoints permitted
@@ -408,7 +408,7 @@
 
   # Deal with case that if n_heights = 1 (i.e. n_internal_changes = 0)
   # then cannot move position of a changepoint
-  prob_move_position[1] <- 0
+  prob_move_pos[1] <- 0
   prob_move_height[1] <- 2 * prob_move_height[1]
 
   list(
@@ -419,10 +419,8 @@
 }
 
 
-
-
-# Small function which performs sampling as we want it to
-# We need to take care with using the sample command as sometimes we pass a single integer j.
+# Helper function which performs sampling
+# We need care with using the sample command as sometimes we pass a single integer j.
 # If we use sample() then we will draw from 1:j which is not what we want
 # This resample function will stop this happening
 .resample <- function(x, size, ...)

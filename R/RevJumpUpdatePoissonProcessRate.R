@@ -36,7 +36,7 @@ RevJumpUpdatePoissonProcessRate <- function(
     stop("Error in matching dimension of rate_s and rate_h")
   }
 
-  u <- runif(1)
+  u <- stats::runif(1)
 
   if(u < prob_move$pos[n_heights]) # Propose moving position of a changepoint
   {
@@ -46,7 +46,7 @@ RevJumpUpdatePoissonProcessRate <- function(
       rate_h = rate_h,
       integrated_rate = integrated_rate)
     rate_s <- update$rate_s
-    integrated_rate <- updte$integrated_rate
+    integrated_rate <- update$integrated_rate
   }
   else if(u < (
     prob_move$pos[n_heights]

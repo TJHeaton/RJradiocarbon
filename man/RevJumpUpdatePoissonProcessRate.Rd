@@ -22,7 +22,7 @@ RevJumpUpdatePoissonProcessRate(
 
 \item{rate_h}{The current heights in the rate (corresponding to above)}
 
-\item{integrated_rate}{The integrak of piecewise constant rate i.e.,
+\item{integrated_rate}{The integral of piecewise constant rate i.e.,
 integral_0^L nu(t) dt}
 
 \item{prior_h_shape, prior_h_rate}{prior parameters on heights
