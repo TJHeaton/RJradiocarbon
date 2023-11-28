@@ -115,7 +115,115 @@ test_that("Death gives expected outcomes", {
 
   # That each running either increases or keeps number changepoints the same
   expect_true(all(diff(n_changes) == 0 | diff(n_changes) == (-1)))
+
 })
 
-# To write test of legacy death proposal
-# Seems to be an issue with prior_h_ratio in main code
+### Second test
+test_that("Death gives same as legacy code", {
+
+  set.seed(14)
+
+  # Set some true values for simulation of theta
+  time_start <- 0
+  time_end <- 10
+  true_rate_s <- c(time_start , time_end)
+  true_rate_h <- 20
+
+  # Choose sensible prior on h
+  # Prior mean matches mean of rate_h
+  prior_h_shape <- 0.1 * mean(true_rate_h)
+  prior_h_rate <- 0.1 # Bit disperse
+
+  prior_n_change_lambda <- 60
+  proposal_ratio <- 0.1
+
+  true_integrated_rate <- .FindIntegral(
+    true_rate_s,
+    true_rate_h)
+
+  n_theta <- 2 * true_integrated_rate # Double expected number
+
+  calendar_ages <- stats::runif(
+    n = n_theta,
+    min = time_start,
+    max = time_end
+  )
+
+  # Create too many initial changepoints
+  initial_n_internal_change <- 300
+  initial_rate_s <- sort(
+    c(
+      time_start,
+      runif(initial_n_internal_change,
+            min = time_start,
+            max = time_end),
+      time_end
+    )
+  )
+  initial_rate_h <- jitter(
+    rep(true_rate_h, initial_n_internal_change + 1),
+    amount = 2
+  )
+  initial_integrated_rate <- .FindIntegral(
+    initial_rate_s,
+    initial_rate_h)
+
+  set.seed(11)
+  rate_s <- initial_rate_s
+  rate_h <- initial_rate_h
+  integrated_rate <- initial_integrated_rate
+
+  for(i in 1:1000) {
+    return_val <- .Death(
+      theta = calendar_ages,
+      rate_s = rate_s,
+      rate_h = rate_h,
+      integrated_rate = integrated_rate,
+      prior_h_shape = prior_h_shape,
+      prior_h_rate = prior_h_rate,
+      prior_n_change_lambda = prior_n_change_lambda,
+      proposal_ratio = proposal_ratio)
+
+    rate_h <- revised_rate_h <- return_val$rate_h
+    rate_s <- revised_rate_s <- return_val$rate_s
+    integrated_rate <- revised_integrated_rate <- return_val$integrated_rate
+  }
+
+  set.seed(11)
+  source(test_path("fixtures", "LegacyDeath.R"))
+  # Reset the starting values
+  rate_s <- initial_rate_s
+  rate_h <- initial_rate_h
+  integrated_rate <- initial_integrated_rate
+
+  for(i in 1:1000) {
+    return_val <- LegacyDeath(
+      th = calendar_ages,
+      s = rate_s,
+      h = rate_h,
+      intrate = integrated_rate,
+      alpha = prior_h_shape,
+      beta = prior_h_rate,
+      lambda = prior_n_change_lambda,
+      propratio = proposal_ratio)
+
+    rate_h <- legacy_rate_h <- return_val$h
+    rate_s <- legacy_rate_s <- return_val$s
+    integrated_rate <- legacy_integrated_rate <- return_val$intrate
+  }
+
+  # Check has changed things
+  expect_false(identical(revised_rate_h, initial_rate_h))
+  expect_false(identical(revised_rate_s, initial_rate_s))
+
+  # Test revised code gives same rate_s after running multiple time
+  expect_identical(revised_rate_s, legacy_rate_s)
+
+  # Test revised code gives same rate_h after running multiple time
+  expect_identical(revised_rate_h, legacy_rate_h)
+
+  # Test revised code gives same integrated rate after running multiple time
+  expect_identical(revised_integrated_rate, legacy_integrated_rate)
+
+})
+
