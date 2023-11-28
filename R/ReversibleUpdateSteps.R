@@ -363,6 +363,64 @@
   return(retlist)
 }
 
+### .FindMoveProbability
+# This function will work out the probabilities for each move in the RJ MCMC sampler
+# Return 4 vectors in list with each move probability for number of heights h = 1,..., kmax+1
+# Note: Uses number of heights to avoid confusion as to the fact that sometimes nk = 0
+# and R does not naturally create vectors with index p[0]
+# Note that nk = nh - 1 (i.e. n_internal_changepoints = n_heights - 1)
+# Arguments:
+# prior_n_change_lambda - prior mean on number of changepoints
+# k_max_changes - maximum number of changepoints permitted
+# rescale_factor - comparison of birth/death vs changing height/position
+.FindMoveProbability <- function(
+    prior_n_change_lambda,
+    k_max_changes,
+    rescale_factor = 0.9)
+{
+  prob_move_pos <- rep(NA, length = k_max_changes + 1)
+  prob_move_height <- rep(NA, length = k_max_changes + 1)
+  prob_move_birth <- rep(NA, length = k_max_changes + 1)
+  prob_move_death <- rep(NA, length = k_max_changes + 1)
+
+  # Fixed constraints
+  prob_move_birth[k_max_changes + 1] <- 0
+  prob_move_death[1] <- 0
+
+  # Now find other probabilities of birth and death ignoring constant c
+  prob_move_birth[1:k_max_changes] <- pmin(
+    1,
+    (stats::dpois(1:k_max_changes, lambda = prior_n_change_lambda)
+     / stats::dpois(0:(k_max_changes - 1), lambda = prior_n_change_lambda))
+  )
+  prob_move_death[2:(k_max_changes + 1)] <- pmin(
+    1,
+    (stats::dpois(0:(k_max_changes - 1), lambda = prior_n_change_lambda)
+     / stats::dpois(1:k_max_changes, lambda = prior_n_change_lambda))
+  )
+
+  # Rescale to allow other moves a reasonable probability
+  rescale_constant <- rescale_factor / max(prob_move_birth + prob_move_death)
+  prob_move_birth <- rescale_constant * prob_move_birth
+  prob_move_death <- rescale_constant * prob_move_death
+
+  prob_move_pos <- prob_move_height <- (1 - prob_move_birth - prob_move_death)/2
+
+  # Deal with case that if n_heights = 1 (i.e. n_internal_changes = 0)
+  # then cannot move position of a changepoint
+  prob_move_position[1] <- 0
+  prob_move_height[1] <- 2 * prob_move_height[1]
+
+  list(
+    pos = prob_move_pos,
+    height = prob_move_height,
+    birth = prob_move_birth,
+    death = prob_move_death)
+}
+
+
+
+
 # Small function which performs sampling as we want it to
 # We need to take care with using the sample command as sometimes we pass a single integer j.
 # If we use sample() then we will draw from 1:j which is not what we want
