@@ -1,7 +1,7 @@
 test_that("FindCalendarAgePriorGivenPoissonProcess gives expected outcomes", {
 
-  rate_s <- c(0,10)
-  rate_h <- 4
+  rate_s <- c(0,5, 10)
+  rate_h <- c(4, 7)
   n_theta <- 100
 
   n_heights <- length(rate_h)
@@ -21,11 +21,11 @@ test_that("FindCalendarAgePriorGivenPoissonProcess gives expected outcomes", {
 })
 
 ### Second test
-# The legacy codeis slighty different as will give h[nh] if theta is s[nh+1]
+# The legacy code is slightly different as will give h[nh] if theta is s[nh+1]
 test_that("FindCalendarAgePriorGivenPoissonProcess gives same as legacy code", {
 
-  rate_s <- c(0,10)
-  rate_h <- 4
+  rate_s <- c(0, 5, 10)
+  rate_h <- c(4, 7)
   n_theta <- 100
 
   n_heights <- length(rate_h)
@@ -44,9 +44,7 @@ test_that("FindCalendarAgePriorGivenPoissonProcess gives same as legacy code", {
     t = theta
   )
 
-  expect_identical(revised_prior_for_theta[1:(n_theta - 1)],
-                   legacy_prior_for_theta[1:(n_theta -1)])
-
-  expect_false(revised_prior_for_theta[n_theta] == legacy_prior_for_theta[n_theta])
+  expect_identical(revised_prior_for_theta,
+                   legacy_prior_for_theta)
 
 })
