@@ -56,6 +56,7 @@ PPcalibrate <- function(
     calendar_age_range = NA,
     rate_s = NA, rate_h = NA,
     prior_n_change_lambda = NA,
+    prior_h_rate = 0.1,
     k_max_changes = NA, # Change name to be consistent
     rescale_factor_rev_jump = 0.9,
     calendar_ages = NA) {
@@ -63,7 +64,9 @@ PPcalibrate <- function(
   # Find initial calendar_age_range
   if(sensible_initialisation) {
     ##############################################################################
-    ## Interpolate cal curve onto single year grid to speed up updating thetas
+    ## Interpolate cal curve onto single year (regular) grid
+    ## Must be regular calendar grid for individual_possible_calendar_ranges
+    ## which works with normalised vector of probabilities
     integer_cal_year_curve <- InterpolateCalibrationCurve(NA, calibration_curve, use_F14C_space)
     interpolated_calendar_age_start <- integer_cal_year_curve$calendar_age_BP[1]
     if (use_F14C_space) {
@@ -98,46 +101,51 @@ PPcalibrate <- function(
   calendar_age_grid <- seq(
     min_potential_calendar_age,
     max_potential_calendar_age,
-    by = calendar_grid_resolution)
+    by = calendar_grid_resolution) # May stop before max_potential_calendar_age (so check needed)
 
-  if(length(unique(diff(calendar_age_grid))) != 1) {
-    stop("You have uneven spacings for your grid of possible calendar ages - the code will not work")
+  # Ensure end of calendar_age_grid extends at least to max_potential_calendar_age
+  # If not extend calendar_age_grid and adjust max_potential_calendar_age so values match
+  if(max(calendar_age_grid) != max_potential_calendar_age) {
+    max_potential_calendar_age <- calendar_age_grid[n_calendar_age_grid] + calendar_grid_resolution
+    calendar_age_grid <- c(calendar_age_grid,
+                           max_potential_calendar_age)
+  }
+
+  if(sensible_initialisation) {
+    ####################################
+    ## Create initial values for hyperparameters on Poisson process rate
+    n_determinations <- length(rc_determinations)
+    initial_estimate_mean_rate <- n_determinations / calendar_age_interval_length
+
+    prior_h_shape <- initial_estimate_mean_rate / prior_h_rate
+
+    ## Create initial change points and heights for Poisson process rTE
+    initial_n_internal_change <- 10
+    initial_rate_s <- sort(
+      c(
+        min_potential_calendar_age,
+        stats::runif(initial_n_internal_change,
+              min = min_potential_calendar_age,
+              max = max_potential_calendar_age),
+        max_potential_calendar_age
+      )
+    )
+    initial_rate_h <- stats::rgamma(
+      n = initial_n_internal_change + 1,
+      shape =  prior_h_shape,
+      rate = prior_h_rate
+    )
+
+    initial_integrated_rate <- .FindIntegral(
+      rate_s = initial_rate_s,
+      rate_h = initial_rate_h
+    )
   }
 
   ####################################
-  ## Create initial values for hyperparameters on Poisson process rate
-  n_determinations <- length(rc_determinations)
-  initial_estimate_mean_rate <- n_determinations / calendar_age_interval_length
-
-  prior_h_shape <- initial_estimate_mean_rate / 0.1
-  prior_h_rate <- 0.1
-
-  ## Create initial change points and heights for Poisson process rTE
-  initial_n_internal_change <- 10
-  initial_rate_s <- sort(
-    c(
-      min_potential_calendar_age,
-      stats::runif(initial_n_internal_change,
-            min = min_potential_calendar_age,
-            max = max_potential_calendar_age),
-      max_potential_calendar_age
-    )
-  )
-  initial_rate_h <- stats::rgamma(
-    n = initial_n_internal_change + 1,
-    shape =  prior_h_shape,
-    rate = prior_h_rate
-  )
-
-  initial_integrated_rate <- .FindIntegral(
-    rate_s = initial_rate_s,
-    rate_h = initial_rate_h
-  )
-
-  rm(initial_n_internal_change, initial_estimate_mean_rate)
-
-  ####################################
   ## Create matrix of calendar_likelihoods (stored in main as not updated throughout samples)
+  ## Different from .ProbabilitiesForSingleDetermination as not normalised
+  ## and can pass theta on different grid to calibration_curve
   likelihood_calendar_ages_from_calibration_curve <- mapply(
     .CalendarAgeLikelihoodGivenCurve,
     rc_determinations,
