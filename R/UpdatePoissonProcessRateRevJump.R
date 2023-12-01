@@ -15,6 +15,7 @@
 #' @return TODO
 #' @export
 #'
+#'
 #' @examples # TO DO
 UpdatePoissonProcessRateRevJump <- function(
     theta,
@@ -485,32 +486,32 @@ UpdatePoissonProcessRateRevJump <- function(
 # Note: nk = nh - 1 (i.e. n_internal_changepoints = n_heights - 1)
 # Arguments:
 # prior_n_change_lambda - prior mean on number of changepoints
-# k_max_changes - maximum number of changepoints permitted
+# k_max_internal_changepoints - maximum number of changepoints permitted
 # rescale_factor - comparison of birth/death vs changing height/position
 .FindMoveProbability <- function(
     prior_n_change_lambda,
-    k_max_changes,
+    k_max_internal_changepoints,
     rescale_factor = 0.9)
 {
-  prob_move_pos <- rep(NA, length = k_max_changes + 1)
-  prob_move_height <- rep(NA, length = k_max_changes + 1)
-  prob_move_birth <- rep(NA, length = k_max_changes + 1)
-  prob_move_death <- rep(NA, length = k_max_changes + 1)
+  prob_move_pos <- rep(NA, length = k_max_internal_changepoints + 1)
+  prob_move_height <- rep(NA, length = k_max_internal_changepoints + 1)
+  prob_move_birth <- rep(NA, length = k_max_internal_changepoints + 1)
+  prob_move_death <- rep(NA, length = k_max_internal_changepoints + 1)
 
   # Fixed constraints
-  prob_move_birth[k_max_changes + 1] <- 0
+  prob_move_birth[k_max_internal_changepoints + 1] <- 0
   prob_move_death[1] <- 0
 
   # Now find other probabilities of birth and death ignoring constant c
-  prob_move_birth[1:k_max_changes] <- pmin(
+  prob_move_birth[1:k_max_internal_changepoints] <- pmin(
     1,
-    (stats::dpois(1:k_max_changes, lambda = prior_n_change_lambda)
-     / stats::dpois(0:(k_max_changes - 1), lambda = prior_n_change_lambda))
+    (stats::dpois(1:k_max_internal_changepoints, lambda = prior_n_change_lambda)
+     / stats::dpois(0:(k_max_internal_changepoints - 1), lambda = prior_n_change_lambda))
   )
-  prob_move_death[2:(k_max_changes + 1)] <- pmin(
+  prob_move_death[2:(k_max_internal_changepoints + 1)] <- pmin(
     1,
-    (stats::dpois(0:(k_max_changes - 1), lambda = prior_n_change_lambda)
-     / stats::dpois(1:k_max_changes, lambda = prior_n_change_lambda))
+    (stats::dpois(0:(k_max_internal_changepoints - 1), lambda = prior_n_change_lambda)
+     / stats::dpois(1:k_max_internal_changepoints, lambda = prior_n_change_lambda))
   )
 
   # Rescale to allow other moves a reasonable probability

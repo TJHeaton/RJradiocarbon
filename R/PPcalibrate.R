@@ -57,7 +57,7 @@ PPcalibrate <- function(
     rate_s = NA, rate_h = NA,
     prior_n_change_lambda = NA,
     prior_h_rate = 0.1,
-    k_max_changes = NA, # Change name to be consistent
+    k_max_internal_changepoints = NA, # Change name to be consistent
     rescale_factor_rev_jump = 0.9,
     calendar_ages = NA) {
 
@@ -163,7 +163,7 @@ PPcalibrate <- function(
 
   prob_move <- .FindMoveProbability(
     prior_n_change_lambda = prior_n_change_lambda,
-    k_max_changes = k_max_changes, # TODO Change this function from k_max_changes as argument to e.g. internal
+    k_max_internal_changepoints = k_max_internal_changepoints,
     rescale_factor = rescale_factor_rev_jump)
 
   ####################################
