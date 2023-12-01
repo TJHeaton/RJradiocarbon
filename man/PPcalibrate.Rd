@@ -14,8 +14,8 @@ PPcalibrate(
   use_F14C_space = TRUE,
   show_progress = TRUE,
   sensible_initialisation = TRUE,
-  s = NA,
-  h = NA,
+  rate_s = NA,
+  rate_h = NA,
   calendar_ages = NA
 )
 }
@@ -50,7 +50,7 @@ adaptive prior on \eqn{\mu_{\phi}} and  (A, B).
 If this is \code{TRUE} (the default), then all the remaining arguments below are
 ignored.}
 
-\item{s, h}{Parameters to define/specify the poisson process rate
+\item{rate_s, rate_h}{Parameters to define/specify the poisson process rate
 (jumps and heights)}
 
 \item{calendar_ages}{The initial estimate for the underlying calendar ages

@@ -1,4 +1,4 @@
-test_that("RevJumpUpdatePoissonProcessRate gives expected outcomes", {
+test_that("UpdatePoissonProcessRateRevJump gives expected outcomes", {
 
   # Set up "true" values
   set.seed(14)
@@ -71,7 +71,7 @@ test_that("RevJumpUpdatePoissonProcessRate gives expected outcomes", {
   integrated_rate <- initial_integrated_rate
 
   for(i in 1:n_iters) {
-    return_val <- RevJumpUpdatePoissonProcessRate(
+    return_val <- UpdatePoissonProcessRateRevJump(
       theta = calendar_ages,
       rate_s = rate_s,
       rate_h = rate_h,
@@ -121,7 +121,7 @@ test_that("RevJumpUpdatePoissonProcessRate gives expected outcomes", {
 
 
 ### Second test
-test_that("RevJumpUpdatePoissonProcessRate gives same as legacy code", {
+test_that("UpdatePoissonProcessRateRevJump gives same as legacy code", {
 
   # Set up "true" values
   set.seed(14)
@@ -186,7 +186,7 @@ test_that("RevJumpUpdatePoissonProcessRate gives same as legacy code", {
   integrated_rate <- initial_integrated_rate
 
   for(i in 1:n_iters) {
-    return_val <- RevJumpUpdatePoissonProcessRate(
+    return_val <- UpdatePoissonProcessRateRevJump(
       theta = calendar_ages,
       rate_s = rate_s,
       rate_h = rate_h,

@@ -30,7 +30,7 @@
 #' If this is `TRUE` (the default), then all the remaining arguments below are
 #' ignored.
 #'
-#' @param s,h Parameters to define/specify the poisson process rate
+#' @param rate_s,rate_h Parameters to define/specify the poisson process rate
 #' (jumps and heights)
 #'
 #' @param calendar_ages  The initial estimate for the underlying calendar ages
@@ -38,10 +38,10 @@
 #' `rc_determinations`.  Required if `sensible_initialisation` is `FALSE`.
 #'
 #'
-#' @return TO DO
+#' @return TODO
 #' @export
 #'
-#' @examples # TO DO
+#' @examples # TODO
 PPcalibrate <- function(
     rc_determinations,
     rc_sigmas,
@@ -52,19 +52,148 @@ PPcalibrate <- function(
     use_F14C_space = TRUE,
     show_progress = TRUE,
     sensible_initialisation = TRUE,
-    s = NA, h = NA,
+    calendar_grid_resolution = 1,
+    calendar_age_range = NA,
+    rate_s = NA, rate_h = NA,
+    prior_n_change_lambda = NA,
+    k_max_changes = NA, # Change name to be consistent
+    rescale_factor_rev_jump = 0.9,
     calendar_ages = NA) {
 
+  # Find initial calendar_age_range
+  if(sensible_initialisation) {
+    ##############################################################################
+    ## Interpolate cal curve onto single year grid to speed up updating thetas
+    integer_cal_year_curve <- InterpolateCalibrationCurve(NA, calibration_curve, use_F14C_space)
+    interpolated_calendar_age_start <- integer_cal_year_curve$calendar_age_BP[1]
+    if (use_F14C_space) {
+      interpolated_rc_age <- integer_cal_year_curve$f14c
+      interpolated_rc_sig <- integer_cal_year_curve$f14c_sig
+    } else {
+      interpolated_rc_age <- integer_cal_year_curve$c14_age
+      interpolated_rc_sig <- integer_cal_year_curve$c14_sig
+    }
+
+    individual_possible_calendar_ranges <- mapply(
+      .FindCalendarRangeForSingleDetermination,
+      rc_determinations,
+      rc_sigmas,
+      MoreArgs = list(
+        F14C_inputs=use_F14C_space,
+        calibration_curve=integer_cal_year_curve,
+        prob_cutoff = 0.005))
+
+    min_potential_calendar_age <- min(
+      individual_possible_calendar_ranges[1,])
+    max_potential_calendar_age <- max(
+      individual_possible_calendar_ranges[2,])
+  } else {
+    ####################################
+    ## Create calendar_age_grid covering potential calendar ages
+    min_potential_calendar_age <- min(calendar_age_range)
+    max_potential_calendar_age <- max(calendar_age_range)
+  }
+
+  calendar_age_interval_length <- max_potential_calendar_age - min_potential_calendar_age
+  calendar_age_grid <- seq(
+    min_potential_calendar_age,
+    max_potential_calendar_age,
+    by = calendar_grid_resolution)
+
+  if(length(unique(diff(calendar_age_grid))) != 1) {
+    stop("You have uneven spacings for your grid of possible calendar ages - the code will not work")
+  }
+
   ####################################
-  ## Create initial values for lambda (specifically s and h)
+  ## Create initial values for hyperparameters on Poisson process rate
+  n_determinations <- length(rc_determinations)
+  initial_estimate_mean_rate <- n_determinations / calendar_age_interval_length
+
+  prior_h_shape <- initial_estimate_mean_rate / 0.1
+  prior_h_rate <- 0.1
+
+  ## Create initial change points and heights for Poisson process rTE
+  initial_n_internal_change <- 10
+  initial_rate_s <- sort(
+    c(
+      min_potential_calendar_age,
+      stats::runif(initial_n_internal_change,
+            min = min_potential_calendar_age,
+            max = max_potential_calendar_age),
+      max_potential_calendar_age
+    )
+  )
+  initial_rate_h <- stats::rgamma(
+    n = initial_n_internal_change + 1,
+    shape =  prior_h_shape,
+    rate = prior_h_rate
+  )
+
+  initial_integrated_rate <- .FindIntegral(
+    rate_s = initial_rate_s,
+    rate_h = initial_rate_h
+  )
+
+  rm(initial_n_internal_change, initial_estimate_mean_rate)
+
+  ####################################
+  ## Create matrix of calendar_likelihoods (stored in main as not updated throughout samples)
+  likelihood_calendar_ages_from_calibration_curve <- mapply(
+    .CalendarAgeLikelihoodGivenCurve,
+    rc_determinations,
+    rc_sigmas,
+    MoreArgs = list(
+      theta = calendar_age_grid,
+      F14C_inputs = F14C_inputs,
+      calibration_curve = calibration_curve)
+  )
+
+  # Set starting values to be initialised ones
+  rate_s <- initial_rate_s
+  rate_h <- initial_rate_h
+  integrated_rate <- initial_integrated_rate
+
+  prob_move <- .FindMoveProbability(
+    prior_n_change_lambda = prior_n_change_lambda,
+    k_max_changes = k_max_changes, # TODO Change this function from k_max_changes as argument to e.g. internal
+    rescale_factor = rescale_factor_rev_jump)
 
   ####################################
   # Perform MCMC - RJMCMC within Gibbs
   # Consist of iterating between:
-  #    i) Updating calendar_ages given lambda (s,h) and rc_determinations
-  #    ii) Updating lambda (s, h) given calendar_ages using RJ MCMC
+  #    i) Updating calendar_ages given lambda (rate_s, rate_h) and rc_determinations
+  #    ii) Updating lambda (rate_s, rate_h) given calendar_ages using RJ MCMC
+  for(i in 1:n_iter) {
 
-  .resample(4,1)
+    ## Step 1: Update calendar_ages given rate_s and rate_h (sample from exactly using Gibbs)
+    calendar_ages <- UpdateCalendarAgesGibbs(
+      likelihood_calendar_ages_from_calibration_curve = likelihood_calendar_ages_from_calibration_curve,
+      calendar_age_grid = calendar_age_grid,
+      rate_s = rate_s,
+      rate_h = rate_h
+    )
+
+    ## Step 2: Update rate_s and rate_h given current calendar_ages (using RJMCMC)
+    updated_poisson_process <- UpdatePoissonProcessRateRevJump(
+      theta = calendar_ages,
+      rate_s = rate_s,
+      rate_h = rate_h,
+      integrated_rate = integrated_rate,
+      prior_h_shape = prior_h_shape,
+      prior_h_rate = prior_h_rate,
+      prior_n_change_lambda = prior_n_change_lambda,
+      prob_move = prob_move
+    )
+
+    rate_s <- updated_poisson_process$rate_s
+    rate_h <- updated_poisson_process$rate_h
+    integrated_rate <- updated_poisson_process$integrated_rate
+
+    if((i %% 100) == 0) cat(".")
+    if((i %% 1000) == 0) cat("+\n")
+  }
+
+
   ####################################
   # Return the relevant outputs
   return("Hello World")

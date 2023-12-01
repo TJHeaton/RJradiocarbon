@@ -15,7 +15,8 @@
 #' @return TODO
 #' @export
 #'
-RevJumpUpdatePoissonProcessRate <- function(
+#' @examples # TO DO
+UpdatePoissonProcessRateRevJump <- function(
     theta,
     rate_s,
     rate_h,

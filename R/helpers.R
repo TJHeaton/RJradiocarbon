@@ -8,6 +8,69 @@
 }
 
 
+
+# Find likelihood (given calibration curve) of:
+# vector of calendar ages theta for a single 14C observation
+.CalendarAgeLikelihoodGivenCurve <- function(
+    rc_determination,
+    rc_sigma,
+    theta,
+    F14C_inputs,
+    calibration_curve)
+{
+  if (F14C_inputs) {
+    calibration_curve <- .AddF14cColumns(calibration_curve)
+    calcurve_rc_ages <- calibration_curve$f14c
+    calcurve_rc_sigs <- calibration_curve$f14c_sig
+  } else {
+    calibration_curve <- .AddC14ageColumns(calibration_curve)
+    calcurve_rc_ages <- calibration_curve$c14_age
+    calcurve_rc_sigs <- calibration_curve$c14_sig
+  }
+
+  cal_curve_mu <- stats::approx(x = calibration_curve$calendar_age,
+                         y = calcurve_rc_ages,
+                         xout = theta)$y
+  cal_curve_sigma <- stats::approx(x = calibration_curve$calendar_age,
+                            y = calcurve_rc_sigs,
+                            xout = theta)$y
+
+  likelihood <- stats::dnorm(rc_determination, cal_curve_mu, sqrt(cal_curve_sigma^2 + rc_sigma^2))
+
+  return(likelihood)
+}
+
+.FindCalendarRangeForSingleDetermination <- function(
+    rc_determination, rc_sigma, F14C_inputs, calibration_curve, prob_cutoff) {
+
+  if (F14C_inputs) {
+    calibration_curve <- .AddF14cColumns(calibration_curve)
+    calcurve_rc_ages <- calibration_curve$f14c
+    calcurve_rc_sigs <- calibration_curve$f14c_sig
+  } else {
+    calibration_curve <- .AddC14ageColumns(calibration_curve)
+    calcurve_rc_ages <- calibration_curve$c14_age
+    calcurve_rc_sigs <- calibration_curve$c14_sig
+  }
+
+  probabilities <- stats::dnorm(
+    rc_determination, mean=calcurve_rc_ages, sd=sqrt(calcurve_rc_sigs^2 + rc_sigma^2))
+  probabilities <- probabilities / sum(probabilities)
+  cumulativeprobabilities <- cumsum(probabilities)
+
+  min_potential_calendar_age <- calibration_curve$calendar_age_BP[
+    min(which(cumulativeprobabilities > prob_cutoff))]
+  max_potential_calendar_age <- calibration_curve$calendar_age_BP[
+    min(which(cumulativeprobabilities > (1 - prob_cutoff)))]
+
+  calendar_range <- c(min_potential_calendar_age, max_potential_calendar_age)
+
+  return(calendar_range)
+}
+
+
+
+
 # Need care with using the sample command as sometimes we pass a single integer j.
 # If use sample() then will draw from 1:j which is not what we want
 # This resample function will stop this happening
