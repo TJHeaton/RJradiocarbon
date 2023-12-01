@@ -14,8 +14,14 @@ PPcalibrate(
   use_F14C_space = TRUE,
   show_progress = TRUE,
   sensible_initialisation = TRUE,
+  calendar_grid_resolution = 1,
+  calendar_age_range = NA,
   rate_s = NA,
   rate_h = NA,
+  prior_n_internal_changes_lambda = NA,
+  prior_h_rate = 0.1,
+  k_max_internal_changepoints = NA,
+  rescale_factor_rev_jump = 0.9,
   calendar_ages = NA
 )
 }
@@ -50,19 +56,38 @@ adaptive prior on \eqn{\mu_{\phi}} and  (A, B).
 If this is \code{TRUE} (the default), then all the remaining arguments below are
 ignored.}
 
-\item{rate_s, rate_h}{Parameters to define/specify the poisson process rate
-(jumps and heights)}
+\item{calendar_grid_resolution}{The spacing of the calendar age grid on which to consider
+the ages of the samples, e.g. t, t + resolution, t + 2 * resolution, ..}
+
+\item{calendar_age_range}{Minimum and maximum calendar ages permitted
+for the calendar ages of the samples, i.e. range_1 < theta < range_2.
+Required if \code{sensible_initialisation} is \code{FALSE}.}
+
+\item{rate_s, rate_h}{Initial parameters to define/specify the poisson process rate
+(jumps and heights).}
+
+\item{prior_n_internal_changes_lambda}{Prior on Poisson parameter specifying
+n_internal_changepoints ~ Po(prior_n_internal_changes_lambda)}
+
+\item{prior_h_rate}{Prior for Poisson Process rate height in any interval
+rate_h ~ Gamma(shape = prior_h_shape, rate = prior_h_rate)
+prior_h_shape is chosen adaptively/internally to match n_observations}
+
+\item{k_max_internal_changepoints}{Maximum permitted number of internal changepoints}
+
+\item{rescale_factor_rev_jump}{Factor weighting probability of dimension change
+in the reversible jump update step for poisson process rate_h and rate_s}
 
 \item{calendar_ages}{The initial estimate for the underlying calendar ages
 (optional). If supplied it must be a vector with the same length as
 \code{rc_determinations}.  Required if \code{sensible_initialisation} is \code{FALSE}.}
 }
 \value{
-TO DO
+TODO
 }
 \description{
 Title
 }
 \examples{
-# TO DO
+# TODO
 }

@@ -8,7 +8,7 @@ test_that("Birth gives expected outcomes", {
 
   prior_h_shape <- 20
   prior_h_rate <- 1
-  prior_n_change_lambda <- 1
+  prior_n_internal_changes_lambda <- 1
   proposal_ratio <- 0.1
 
   true_mean_h <- prior_h_shape/prior_h_rate
@@ -50,7 +50,7 @@ test_that("Birth gives expected outcomes", {
       integrated_rate = integrated_rate,
       prior_h_shape = prior_h_shape,
       prior_h_rate = prior_h_rate,
-      prior_n_change_lambda = prior_n_change_lambda,
+      prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
       proposal_ratio = proposal_ratio)
 
     rate_h <- return_rate_h <- return_val$rate_h
@@ -109,7 +109,7 @@ test_that("Birth gives same as legacy code", {
 
   prior_h_shape <- 20
   prior_h_rate <- 1
-  prior_n_change_lambda <- 1
+  prior_n_internal_changes_lambda <- 1
   proposal_ratio <- 0.1
 
   true_mean_h <- prior_h_shape/prior_h_rate
@@ -147,7 +147,7 @@ test_that("Birth gives same as legacy code", {
       integrated_rate = integrated_rate,
       prior_h_shape = prior_h_shape,
       prior_h_rate = prior_h_rate,
-      prior_n_change_lambda = prior_n_change_lambda,
+      prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
       proposal_ratio = proposal_ratio)
 
     rate_h <- return_rate_h <- return_val$rate_h
@@ -178,7 +178,7 @@ test_that("Birth gives same as legacy code", {
       intrate = integrated_rate,
       alpha = prior_h_shape,
       beta = prior_h_rate,
-      lambda = prior_n_change_lambda,
+      lambda = prior_n_internal_changes_lambda,
       propratio = proposal_ratio)
 
     previous_n_change <- length(rate_h)

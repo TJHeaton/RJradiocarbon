@@ -11,7 +11,7 @@ UpdatePoissonProcessRateRevJump(
   integrated_rate,
   prior_h_shape,
   prior_h_rate,
-  prior_n_change_lambda,
+  prior_n_internal_changes_lambda,
   prob_move
 )
 }
@@ -28,7 +28,7 @@ integral_0^L nu(t) dt}
 \item{prior_h_shape, prior_h_rate}{prior parameters on heights
 We assume each height in piecewise rate has h ~ Gamma(shape, rate)}
 
-\item{prior_n_change_lambda}{Prior on number of internal changepoints n ~ Po(lambda)}
+\item{prior_n_internal_changes_lambda}{Prior on number of internal changepoints n ~ Po(lambda)}
 
 \item{prob_move}{Dataframe with probability of each type of RJ move
 (change_pos, change_height, birth, death)}

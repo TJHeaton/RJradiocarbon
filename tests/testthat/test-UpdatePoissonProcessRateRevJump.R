@@ -14,8 +14,8 @@ test_that("UpdatePoissonProcessRateRevJump gives expected outcomes", {
   prior_h_shape <- 0.1 * mean(true_rate_h)
   prior_h_rate <- 0.1 # Bit disperse
 
-  prior_n_change_lambda <- 6
-  k_max_changes <- 20
+  prior_n_internal_changes_lambda <- 6
+  k_max_internal_changepoints <- 20
 
   n_sections <- length(true_rate_h)
   n_obs_per_section <- rpois(
@@ -34,12 +34,12 @@ test_that("UpdatePoissonProcessRateRevJump gives expected outcomes", {
 
   # Now initialise (as overdispersed) and run
   prob_move <- .FindMoveProbability(
-    prior_n_change_lambda = prior_n_change_lambda,
-    k_max_changes = k_max_changes,
+    prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
+    k_max_internal_changepoints = k_max_internal_changepoints,
     rescale_factor = 0.9)
 
   # Create too many initial changepoints
-  initial_n_internal_change <- pmax(0, k_max_changes - 5)
+  initial_n_internal_change <- pmax(0, k_max_internal_changepoints - 5)
   initial_rate_s <- sort(
     c(
       time_start,
@@ -78,7 +78,7 @@ test_that("UpdatePoissonProcessRateRevJump gives expected outcomes", {
       integrated_rate = integrated_rate,
       prior_h_shape = prior_h_shape,
       prior_h_rate = prior_h_rate,
-      prior_n_change_lambda = prior_n_change_lambda,
+      prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
       prob_move = prob_move
     )
 
@@ -137,8 +137,8 @@ test_that("UpdatePoissonProcessRateRevJump gives same as legacy code", {
   prior_h_shape <- 0.1 * mean(true_rate_h)
   prior_h_rate <- 0.1 # Bit disperse
 
-  prior_n_change_lambda <- 6
-  k_max_changes <- 20
+  prior_n_internal_changes_lambda <- 6
+  k_max_internal_changepoints <- 20
 
   n_sections <- length(true_rate_h)
   n_obs_per_section <- rpois(
@@ -156,7 +156,7 @@ test_that("UpdatePoissonProcessRateRevJump gives same as legacy code", {
   }
 
   # Create too many initial changepoints
-  initial_n_internal_change <- pmax(0, k_max_changes - 5)
+  initial_n_internal_change <- pmax(0, k_max_internal_changepoints - 5)
   initial_rate_s <- sort(
     c(
       time_start,
@@ -176,8 +176,8 @@ test_that("UpdatePoissonProcessRateRevJump gives same as legacy code", {
 
   # Run revised
   prob_move <- .FindMoveProbability(
-    prior_n_change_lambda = prior_n_change_lambda,
-    k_max_changes = k_max_changes,
+    prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
+    k_max_internal_changepoints = k_max_internal_changepoints,
     rescale_factor = 0.9)
 
   set.seed(11)
@@ -193,7 +193,7 @@ test_that("UpdatePoissonProcessRateRevJump gives same as legacy code", {
       integrated_rate = integrated_rate,
       prior_h_shape = prior_h_shape,
       prior_h_rate = prior_h_rate,
-      prior_n_change_lambda = prior_n_change_lambda,
+      prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
       prob_move = prob_move
     )
 
@@ -206,8 +206,8 @@ test_that("UpdatePoissonProcessRateRevJump gives same as legacy code", {
   source(test_path("fixtures", "LegacyFindMoveProb.R"))
   source(test_path("fixtures", "LegacySingleRJUpdate.R"))
   pMove <- LegacyFindMoveProb(
-    lambda = prior_n_change_lambda,
-    kmax = k_max_changes
+    lambda = prior_n_internal_changes_lambda,
+    kmax = k_max_internal_changepoints
   )
 
   set.seed(11)
@@ -224,7 +224,7 @@ test_that("UpdatePoissonProcessRateRevJump gives same as legacy code", {
       intrate = integrated_rate,
       alpha = prior_h_shape,
       beta = prior_h_rate,
-      lambda = prior_n_change_lambda,
+      lambda = prior_n_internal_changes_lambda,
       pMove = pMove
     )
 
