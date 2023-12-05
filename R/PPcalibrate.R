@@ -86,7 +86,7 @@ PPcalibrate <- function(
     ## Interpolate cal curve onto single year (regular) grid
     ## Must be regular calendar grid for individual_possible_calendar_ranges
     ## which works with normalised vector of probabilities
-    integer_cal_year_curve <- InterpolateCalibrationCurve(NA, calibration_curve, use_F14C_space)
+    integer_cal_year_curve <- carbondate::InterpolateCalibrationCurve(NA, calibration_curve, use_F14C_space)
     interpolated_calendar_age_start <- integer_cal_year_curve$calendar_age_BP[1]
     if (use_F14C_space) {
       interpolated_rc_age <- integer_cal_year_curve$f14c

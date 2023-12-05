@@ -241,6 +241,4 @@ test_that("UpdatePoissonProcessRateRevJump gives same as legacy code", {
   expect_identical(revised_rate_h, legacy_rate_h)
   expect_identical(revised_integrated_rate, legacy_integrated_rate)
 
-  browser()
-
 })
