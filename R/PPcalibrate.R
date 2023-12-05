@@ -116,7 +116,6 @@ PPcalibrate <- function(
     max_potential_calendar_age <- max(calendar_age_range)
   }
 
-  calendar_age_interval_length <- max_potential_calendar_age - min_potential_calendar_age
   calendar_age_grid <- seq(
     min_potential_calendar_age,
     max_potential_calendar_age,
@@ -131,6 +130,8 @@ PPcalibrate <- function(
     calendar_age_grid <- c(calendar_age_grid,
                            max_potential_calendar_age)
   }
+
+  calendar_age_interval_length <- max_potential_calendar_age - min_potential_calendar_age
 
   if(sensible_initialisation) {
     ####################################
@@ -177,6 +178,8 @@ PPcalibrate <- function(
       calibration_curve = calibration_curve)
   )
 
+  num_observations <- length(rc_determinations)
+
   # Set starting values to be initialised ones
   rate_s <- initial_rate_s
   rate_h <- initial_rate_h
@@ -188,11 +191,28 @@ PPcalibrate <- function(
     rescale_factor = rescale_factor_rev_jump)
 
   ####################################
+  # Create storage for output
+  n_out <- floor(n_iter / n_thin)
+
+  rate_s_out <- list(rate_s)
+  rate_h_out <- list(rate_h)
+  n_internal_changes <- rep(NA, length = n_out)
+  theta_out <- matrix(NA, nrow = n_out, ncol = num_observations)
+
+  output_index <- 0
+
+  #####################################
   # Perform MCMC - RJMCMC within Gibbs
   # Consist of iterating between:
   #    i) Updating calendar_ages given lambda (rate_s, rate_h) and rc_determinations
   #    ii) Updating lambda (rate_s, rate_h) given calendar_ages using RJ MCMC
-  for(i in 1:n_iter) {
+
+  if (show_progress) {
+    progress_bar <- utils::txtProgressBar(min = 0, max = n_iter, style = 3)
+  }
+
+
+  for(iter in 1:n_iter) {
 
     ## Step 1: Update calendar_ages given rate_s and rate_h (sample from exactly using Gibbs)
     calendar_ages <- UpdateCalendarAgesGibbs(
@@ -218,12 +238,30 @@ PPcalibrate <- function(
     rate_h <- updated_poisson_process$rate_h
     integrated_rate <- updated_poisson_process$integrated_rate
 
-    if((i %% 100) == 0) cat(".")
-    if((i %% 1000) == 0) cat("+\n")
+    # Store output
+    if (iter %% n_thin == 0) {
+      output_index <- output_index + 1
+      n_internal_changes[output_index] <- length(rate_h) - 1
+      rate_h_out[[output_index]] <- rate_h
+      rate_s_out[[output_index]] <- rate_s
+      theta_out[output_index, ] <- calendar_ages
+    }
+
+    if (show_progress) {
+      if (iter %% 100 == 0) {
+        utils::setTxtProgressBar(progress_bar, iter)
+      }
+    }
   }
 
+  return_list <- list(
+    rate_s = rate_s_out,
+    rate_h = rate_h_out,
+    calendar_ages = theta_out,
+    n_internal_changes = n_internal_changes,
+    process_cal_age_range = c(min_potential_calendar_age,
+                              max_potential_calendar_age))
 
-  ####################################
-  # Return the relevant outputs
-  return("Hello World")
+  if (show_progress) close(progress_bar)
+  return(return_list)
 }
