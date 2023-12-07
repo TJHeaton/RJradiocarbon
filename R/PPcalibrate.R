@@ -160,7 +160,7 @@ PPcalibrate <- function(
     ####################################
     ## Create initial values for hyperparameters on Poisson process rate
     initial_estimate_mean_rate <- n_determinations / calendar_age_interval_length
-    prior_h_rate <- default_prior_h_rate # Determines diffusivity
+    prior_h_rate <- default_prior_h_rate # Determines diffusivity Var[rate_h] = (mean_rate/prior_h_rate)
     prior_h_shape <- initial_estimate_mean_rate / prior_h_rate
   }
 
