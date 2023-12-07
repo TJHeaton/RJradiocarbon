@@ -40,8 +40,8 @@
 #' @param rate_s,rate_h Initial parameters to define/specify the poisson process rate
 #' (jumps and heights).
 #'
-#' @param prior_n_internal_changes_lambda Prior on Poisson parameter specifying
-#' n_internal_changepoints ~ Po(prior_n_internal_changes_lambda)
+#' @param prior_n_internal_changepoints_lambda Prior on Poisson parameter specifying
+#' n_internal_changepoints ~ Po(prior_n_internal_changepoints_lambda)
 #'
 #' @param prior_h_rate Prior for Poisson Process rate height in any interval
 #' rate_h ~ Gamma(shape = prior_h_shape, rate = prior_h_rate)
@@ -74,7 +74,7 @@ PPcalibrate <- function(
     calendar_grid_resolution = 1,
     calendar_age_range = NA,
     rate_s = NA, rate_h = NA,
-    prior_n_internal_changes_lambda = NA,
+    prior_n_internal_changepoints_lambda = NA,
     prior_h_rate = 0.1,
     k_max_internal_changepoints = NA,
     rescale_factor_rev_jump = 0.9,
@@ -181,7 +181,7 @@ PPcalibrate <- function(
   input_parameters <- list(
     pp_cal_age_range = c(min_potential_calendar_age,
                          max_potential_calendar_age),
-    prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
+    prior_n_internal_changepoints_lambda = prior_n_internal_changepoints_lambda,
     k_max_internal_changepoints = k_max_internal_changepoints,
     prior_h_shape = prior_h_shape,
     prior_h_rate = prior_h_rate,
@@ -211,7 +211,7 @@ PPcalibrate <- function(
   integrated_rate <- initial_integrated_rate
 
   prob_move <- .FindMoveProbability(
-    prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
+    prior_n_internal_changepoints_lambda = prior_n_internal_changepoints_lambda,
     k_max_internal_changepoints = k_max_internal_changepoints,
     rescale_factor = rescale_factor_rev_jump)
 
@@ -255,7 +255,7 @@ PPcalibrate <- function(
       integrated_rate = integrated_rate,
       prior_h_shape = prior_h_shape,
       prior_h_rate = prior_h_rate,
-      prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
+      prior_n_internal_changepoints_lambda = prior_n_internal_changepoints_lambda,
       prob_move = prob_move
     )
 

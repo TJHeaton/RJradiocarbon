@@ -13,7 +13,7 @@ test_that("Death gives expected outcomes", {
   prior_h_shape <- 0.1 * mean(true_rate_h)
   prior_h_rate <- 0.1 # Bit disperse
 
-  prior_n_internal_changes_lambda <- 60
+  prior_n_internal_changepoints_lambda <- 60
   proposal_ratio <- 0.1
 
   true_integrated_rate <- .FindIntegral(
@@ -71,7 +71,7 @@ test_that("Death gives expected outcomes", {
       integrated_rate = integrated_rate,
       prior_h_shape = prior_h_shape,
       prior_h_rate = prior_h_rate,
-      prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
+      prior_n_internal_changepoints_lambda = prior_n_internal_changepoints_lambda,
       proposal_ratio = proposal_ratio)
 
     rate_h <- return_rate_h <- return_val$rate_h
@@ -134,7 +134,7 @@ test_that("Death gives same as legacy code", {
   prior_h_shape <- 0.1 * mean(true_rate_h)
   prior_h_rate <- 0.1 # Bit disperse
 
-  prior_n_internal_changes_lambda <- 60
+  prior_n_internal_changepoints_lambda <- 60
   proposal_ratio <- 0.1
 
   true_integrated_rate <- .FindIntegral(
@@ -181,7 +181,7 @@ test_that("Death gives same as legacy code", {
       integrated_rate = integrated_rate,
       prior_h_shape = prior_h_shape,
       prior_h_rate = prior_h_rate,
-      prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
+      prior_n_internal_changepoints_lambda = prior_n_internal_changepoints_lambda,
       proposal_ratio = proposal_ratio)
 
     rate_h <- revised_rate_h <- return_val$rate_h
@@ -204,7 +204,7 @@ test_that("Death gives same as legacy code", {
       intrate = integrated_rate,
       alpha = prior_h_shape,
       beta = prior_h_rate,
-      lambda = prior_n_internal_changes_lambda,
+      lambda = prior_n_internal_changepoints_lambda,
       propratio = proposal_ratio)
 
     rate_h <- legacy_rate_h <- return_val$h

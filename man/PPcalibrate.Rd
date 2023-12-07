@@ -18,7 +18,7 @@ PPcalibrate(
   calendar_age_range = NA,
   rate_s = NA,
   rate_h = NA,
-  prior_n_internal_changes_lambda = NA,
+  prior_n_internal_changepoints_lambda = NA,
   prior_h_rate = 0.1,
   k_max_internal_changepoints = NA,
   rescale_factor_rev_jump = 0.9,
@@ -66,8 +66,8 @@ Required if \code{sensible_initialisation} is \code{FALSE}.}
 \item{rate_s, rate_h}{Initial parameters to define/specify the poisson process rate
 (jumps and heights).}
 
-\item{prior_n_internal_changes_lambda}{Prior on Poisson parameter specifying
-n_internal_changepoints ~ Po(prior_n_internal_changes_lambda)}
+\item{prior_n_internal_changepoints_lambda}{Prior on Poisson parameter specifying
+n_internal_changepoints ~ Po(prior_n_internal_changepoints_lambda)}
 
 \item{prior_h_rate}{Prior for Poisson Process rate height in any interval
 rate_h ~ Gamma(shape = prior_h_shape, rate = prior_h_rate)

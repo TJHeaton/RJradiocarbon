@@ -1,10 +1,10 @@
 test_that("FindMoveProbability gives expected outcome", {
 
-  prior_n_internal_changes_lambda <- 60
+  prior_n_internal_changepoints_lambda <- 60
   k_max_internal_changepoints <- 300
 
   prob_move <- .FindMoveProbability(
-    prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
+    prior_n_internal_changepoints_lambda = prior_n_internal_changepoints_lambda,
     k_max_internal_changepoints = k_max_internal_changepoints,
     rescale_factor = 0.9)
 
@@ -21,17 +21,17 @@ test_that("FindMoveProbability gives expected outcome", {
 
 
 test_that("FindMoveProbability gives same as legacy code", {
-  prior_n_internal_changes_lambda <- 60
+  prior_n_internal_changepoints_lambda <- 60
   k_max_internal_changepoints <- 300
 
   revised_prob_move <- .FindMoveProbability(
-    prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
+    prior_n_internal_changepoints_lambda = prior_n_internal_changepoints_lambda,
     k_max_internal_changepoints = k_max_internal_changepoints,
     rescale_factor = 0.9)
 
   source(test_path("fixtures", "LegacyFindMoveProb.R"))
   legacy_prob_move <- LegacyFindMoveProb(
-    lambda = prior_n_internal_changes_lambda,
+    lambda = prior_n_internal_changepoints_lambda,
     kmax = k_max_internal_changepoints)
 
   expect_identical(revised_prob_move$pos,

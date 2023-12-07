@@ -8,7 +8,7 @@
 #' @param prior_h_shape,prior_h_rate prior parameters on heights
 #' We assume each height in piecewise rate has h ~ Gamma(shape, rate)
 
-#' @param prior_n_internal_changes_lambda Prior on number of internal changepoints n ~ Po(lambda)
+#' @param prior_n_internal_changepoints_lambda Prior on number of internal changepoints n ~ Po(lambda)
 #' @param prob_move Dataframe with probability of each type of RJ move
 #' (change_pos, change_height, birth, death)
 #'
@@ -24,7 +24,7 @@ UpdatePoissonProcessRateRevJump <- function(
     integrated_rate,
     prior_h_shape,
     prior_h_rate,
-    prior_n_internal_changes_lambda,
+    prior_n_internal_changepoints_lambda,
     prob_move) {
 
   n_changepoints <- length(rate_s)
@@ -81,7 +81,7 @@ UpdatePoissonProcessRateRevJump <- function(
       integrated_rate = integrated_rate,
       prior_h_shape =  prior_h_shape,
       prior_h_rate = prior_h_rate,
-      prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
+      prior_n_internal_changepoints_lambda = prior_n_internal_changepoints_lambda,
       proposal_ratio = proposal_ratio)
     rate_s <- update$rate_s
     rate_h <- update$rate_h
@@ -100,7 +100,7 @@ UpdatePoissonProcessRateRevJump <- function(
       integrated_rate = integrated_rate,
       prior_h_shape = prior_h_shape,
       prior_h_rate = prior_h_rate,
-      prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
+      prior_n_internal_changepoints_lambda = prior_n_internal_changepoints_lambda,
       proposal_ratio = proposal_ratio)
 
     rate_s <- update$rate_s
@@ -275,7 +275,7 @@ UpdatePoissonProcessRateRevJump <- function(
 # rate_h - the heights
 # integrated_rate - integral_0^L nu(t) dt
 # prior_h_shape, prior_h_rate - prior parameters on heights h ~ Gamma(shape, rate)
-# prior_n_internal_changes_lambda - prior on number of changepoints n ~ Po(lambda)
+# prior_n_internal_changepoints_lambda - prior on number of changepoints n ~ Po(lambda)
 # proposal_ratio - proposal ratio for an additional changepoint
 .Birth <- function(
     theta,
@@ -284,7 +284,7 @@ UpdatePoissonProcessRateRevJump <- function(
     integrated_rate,
     prior_h_shape,
     prior_h_rate,
-    prior_n_internal_changes_lambda,
+    prior_n_internal_changepoints_lambda,
     proposal_ratio)
 {
   n_changepoints <- length(rate_s)
@@ -312,8 +312,8 @@ UpdatePoissonProcessRateRevJump <- function(
 
   # Find the prior ratio for dimension
   log_prior_num_change_ratio <- (
-    stats::dpois(n_internal_changepoints + 1, prior_n_internal_changes_lambda, log = TRUE)
-    - stats::dpois(n_internal_changepoints, prior_n_internal_changes_lambda, log = TRUE)
+    stats::dpois(n_internal_changepoints + 1, prior_n_internal_changepoints_lambda, log = TRUE)
+    - stats::dpois(n_internal_changepoints, prior_n_internal_changepoints_lambda, log = TRUE)
   )
 
   prior_spacing_ratio <- (
@@ -383,7 +383,7 @@ UpdatePoissonProcessRateRevJump <- function(
 # rate_h - the heights
 # integrated_rate - integral_0^L nu(t) dt
 # prior_h_shape, prior_h_rate - prior parameters on heights h ~ Gamma(shape, rate)
-# prior_n_internal_changes_lambda - prior on number of internal changepoints n ~ Po(lambda)
+# prior_n_internal_changepoints_lambda - prior on number of internal changepoints n ~ Po(lambda)
 # proposal_ratio - proposal ratio for an additional changepoint
 .Death <- function(
     theta,
@@ -392,7 +392,7 @@ UpdatePoissonProcessRateRevJump <- function(
     integrated_rate,
     prior_h_shape,
     prior_h_rate,
-    prior_n_internal_changes_lambda,
+    prior_n_internal_changepoints_lambda,
     proposal_ratio)
 {
   n_changepoints <- length(rate_s)
@@ -417,8 +417,8 @@ UpdatePoissonProcessRateRevJump <- function(
 
   # Find the prior ratio for dimension
   log_prior_num_change_ratio <- (
-    stats::dpois(n_internal_changepoints - 1 , prior_n_internal_changes_lambda, log = TRUE)
-    - stats::dpois(n_internal_changepoints, prior_n_internal_changes_lambda, log = TRUE)
+    stats::dpois(n_internal_changepoints - 1 , prior_n_internal_changepoints_lambda, log = TRUE)
+    - stats::dpois(n_internal_changepoints, prior_n_internal_changepoints_lambda, log = TRUE)
   )
 
   prior_spacing_ratio <- (
@@ -485,11 +485,11 @@ UpdatePoissonProcessRateRevJump <- function(
 # and R does not create vectors with index p[0]
 # Note: nk = nh - 1 (i.e. n_internal_changepoints = n_heights - 1)
 # Arguments:
-# prior_n_internal_changes_lambda - prior mean on number of changepoints
+# prior_n_internal_changepoints_lambda - prior mean on number of changepoints
 # k_max_internal_changepoints - maximum number of changepoints permitted
 # rescale_factor - comparison of birth/death vs changing height/position
 .FindMoveProbability <- function(
-    prior_n_internal_changes_lambda,
+    prior_n_internal_changepoints_lambda,
     k_max_internal_changepoints,
     rescale_factor = 0.9)
 {
@@ -505,13 +505,13 @@ UpdatePoissonProcessRateRevJump <- function(
   # Now find other probabilities of birth and death ignoring constant c
   prob_move_birth[1:k_max_internal_changepoints] <- pmin(
     1,
-    (stats::dpois(1:k_max_internal_changepoints, lambda = prior_n_internal_changes_lambda)
-     / stats::dpois(0:(k_max_internal_changepoints - 1), lambda = prior_n_internal_changes_lambda))
+    (stats::dpois(1:k_max_internal_changepoints, lambda = prior_n_internal_changepoints_lambda)
+     / stats::dpois(0:(k_max_internal_changepoints - 1), lambda = prior_n_internal_changepoints_lambda))
   )
   prob_move_death[2:(k_max_internal_changepoints + 1)] <- pmin(
     1,
-    (stats::dpois(0:(k_max_internal_changepoints - 1), lambda = prior_n_internal_changes_lambda)
-     / stats::dpois(1:k_max_internal_changepoints, lambda = prior_n_internal_changes_lambda))
+    (stats::dpois(0:(k_max_internal_changepoints - 1), lambda = prior_n_internal_changepoints_lambda)
+     / stats::dpois(1:k_max_internal_changepoints, lambda = prior_n_internal_changepoints_lambda))
   )
 
   # Rescale to allow other moves a reasonable probability
