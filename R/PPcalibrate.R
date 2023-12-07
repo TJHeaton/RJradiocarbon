@@ -80,6 +80,17 @@ PPcalibrate <- function(
     rescale_factor_rev_jump = 0.9,
     calendar_ages = NA) {
 
+  ##############################################################################
+  # Save input data
+  input_data <- list(
+    rc_determinations = rc_determinations,
+    rc_sigmas = rc_sigmas,
+    F14C_inputs = F14C_inputs,
+    calibration_curve_name = deparse(substitute(calibration_curve)))
+
+
+
+
   # Find initial calendar_age_range
   if(sensible_initialisation) {
     ##############################################################################
@@ -163,6 +174,20 @@ PPcalibrate <- function(
       rate_h = initial_rate_h
     )
   }
+
+
+  ##############################################################################
+  # Save input parameters
+  input_parameters <- list(
+    pp_cal_age_range = c(min_potential_calendar_age,
+                         max_potential_calendar_age),
+    prior_n_internal_changes_lambda = prior_n_internal_changes_lambda,
+    k_max_internal_changepoints = k_max_internal_changepoints,
+    prior_h_shape = prior_h_shape,
+    prior_h_rate = prior_h_rate,
+    rescale_factor_rev_jump = rescale_factor_rev_jump,
+    n_iter = n_iter,
+    n_thin = n_thin)
 
   ####################################
   ## Create matrix of calendar_likelihoods (stored in main as not updated throughout samples)
@@ -259,9 +284,11 @@ PPcalibrate <- function(
     rate_h = rate_h_out,
     calendar_ages = theta_out,
     n_internal_changes = n_internal_changes,
-    process_cal_age_range = c(min_potential_calendar_age,
-                              max_potential_calendar_age))
+    input_data = input_data,
+    input_parameters = input_parameters)
 
   if (show_progress) close(progress_bar)
   return(return_list)
 }
+
+## TODO - Think about how to choose min and max cut-off currently ends where there is an observation so will have higher rate
