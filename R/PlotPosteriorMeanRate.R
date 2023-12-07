@@ -55,7 +55,7 @@ PlotPosteriorMeanRate <- function(
     n_posterior_samples = 5000,
     calibration_curve = NULL,
     plot_14C_age = TRUE,
-    show_individual_means = FALSE,
+    show_individual_means = TRUE,
     show_confidence_intervals = TRUE,
     interval_width = "2sigma",
     bespoke_probability = NA,
@@ -64,4 +64,165 @@ PlotPosteriorMeanRate <- function(
     n_burn = NA,
     n_end = NA) {
 
+  n_thin <- output_data$input_parameters$n_thin
+  n_out <- length(output_data$n_internal_changes)
+
+  if (is.na(n_burn)) { n_burn <- floor(n_out / 2) } else { n_burn <- floor(n_burn / n_thin) }
+  if (is.na(n_end)) { n_end <- n_out } else { n_end <- floor(n_end / n_thin) }
+
+  if (is.null(calibration_curve)) {
+    calibration_curve <- get(output_data$input_data$calibration_curve_name)
+  }
+  rc_determinations <- output_data$input_data$rc_determinations
+  rc_sigmas <- output_data$input_data$rc_sigmas
+  F14C_inputs <-output_data$input_data$F14C_inputs
+
+  if (plot_14C_age == TRUE) {
+    calibration_curve <- .AddC14ageColumns(calibration_curve)
+    if (F14C_inputs == TRUE) {
+      converted <- .ConvertF14cTo14Cage(rc_determinations, rc_sigmas)
+      rc_determinations <- converted$c14_age
+    }
+  } else {
+    calibration_curve <- .AddF14cColumns(calibration_curve)
+    if (F14C_inputs == FALSE) {
+      converted <- .Convert14CageToF14c(rc_determinations, rc_sigmas)
+      rc_determinations <- converted$f14c
+    }
+  }
+
+  ##############################################################################
+  # Calculate means
+  if (show_individual_means){
+    calendar_age_means <- apply(output_data$calendar_ages[n_burn:n_end, ], 2, mean)
+  }
+
+  ##############################################################################
+  # Initialise plotting parameters
+  calibration_curve_colour <- "blue"
+  calibration_curve_bg <- grDevices::rgb(0, 0, 1, .3)
+  output_colour <- "purple"
+
+  calendar_age_sequence <- seq(
+    from = min(output_data$rate_s[[1]]), to = max(output_data$rate_s[[1]]), length.out = n_calc)
+  plot_AD <- any(calendar_age_sequence < 0)
+  ##############################################################################
+  # Calculate means and rate
+
+  if (show_individual_means){
+    calendar_age_means <- apply(output_data$calendar_ages[n_burn:n_end, ], 2, mean)
+  }
+
+  indices <- sample(n_burn:n_end, n_posterior_samples, replace = ((n_end - n_burn + 1) < n_posterior_samples))
+  rate <- matrix(NA, nrow = n_posterior_samples, ncol = length(calendar_age_sequence))
+  for (i in 1:n_posterior_samples) {
+    ind <- indices[i]
+    rate[i,] <- stats::approx(
+      x = output_data$rate_s[[ind]],
+      y = c(output_data$rate_h[[ind]], 0),
+      xout = calendar_age_sequence,
+      method = "constant")$y
+  }
+  edge_width <- switch(
+    interval_width,
+    "1sigma" = 1 - stats::pnorm(1),
+    "2sigma"  = 1 - stats::pnorm(2),
+    "bespoke" = (1 - bespoke_probability)/2
+  )
+  posterior_rate <- data.frame(
+    calendar_age = calendar_age_sequence,
+    rate_mean = apply(rate, 2, mean),
+    rate_ci_lower = apply(rate, 2, stats::quantile, probs = edge_width),
+    rate_ci_upper = apply(rate, 2, stats::quantile, probs = 1 - edge_width)
+  )
+
+  ##############################################################################
+  # Calculate plot scaling
+  xlim <- rev(range(calendar_age_sequence))
+  ylim_rate <- c(0, denscale * max(posterior_rate$rate_mean))
+
+  ##############################################################################
+  # Plot curves
+
+  .PlotCalibrationCurveAndInputData(
+    plot_AD,
+    xlim,
+    calibration_curve,
+    rc_determinations,
+    plot_14C_age,
+    calibration_curve_colour,
+    calibration_curve_bg,
+    interval_width,
+    bespoke_probability)
+
+  .SetUpDensityPlot(plot_AD, xlim, ylim_rate)
+
+  if (show_individual_means) {
+    if (plot_AD) {
+      calendar_age_means <- 1950 - calendar_age_means
+    }
+    graphics::rug(calendar_age_means, side = 1, quiet = TRUE)
+  }
+  .PlotRateEstimateOnCurrentPlot(plot_AD, posterior_rate, output_colour, show_confidence_intervals)
+
+  .AddLegendToRatePlot(
+    output_data,
+    show_confidence_intervals,
+    interval_width,
+    bespoke_probability,
+    calibration_curve_colour,
+    output_colour)
+
+  invisible(posterior_rate)
 }
+
+
+.PlotRateEstimateOnCurrentPlot <- function(plot_AD, posterior_rate, output_colour, show_confidence_intervals) {
+
+  if (plot_AD) {
+    cal_age <- 1950 - posterior_rate$calendar_age
+  } else {
+    cal_age <- posterior_rate$calendar_age
+  }
+
+  graphics::lines(cal_age, posterior_rate$rate_mean, col = output_colour)
+  if (show_confidence_intervals) {
+    graphics::lines(cal_age, posterior_rate$rate_ci_lower, col = output_colour, lty = 2)
+    graphics::lines(cal_age, posterior_rate$rate_ci_upper, col = output_colour, lty = 2)
+  }
+}
+
+
+.AddLegendToRatePlot <- function(
+    output_data,
+    show_confidence_intervals,
+    interval_width,
+    bespoke_probability,
+    calibration_curve_colour,
+    output_colour) {
+
+  ci_label <- switch(
+    interval_width,
+    "1sigma" = expression(paste(sigma, " interval")),
+    "2sigma"  = expression(paste("2", sigma, " interval")),
+    "bespoke" = paste0(round(100 * bespoke_probability), "% interval"))
+
+  legend_labels <- c(
+    gsub("intcal", "IntCal", output_data$input_data$calibration_curve_name),
+    ci_label,
+    "Posterior mean rate")
+  lty <- c(1, 2, 1)
+  pch <- c(NA, NA, NA)
+  col <- c(calibration_curve_colour, calibration_curve_colour, output_colour)
+
+  if (show_confidence_intervals) {
+    legend_labels <- c(legend_labels, ci_label)
+    lty <- c(lty, 2)
+    pch <- c(pch, NA)
+    col <- c(col, output_colour)
+  }
+
+  graphics::legend(
+    "topright", legend = legend_labels, lty = lty, pch = pch, col = col)
+}
+

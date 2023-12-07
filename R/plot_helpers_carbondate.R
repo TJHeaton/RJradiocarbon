@@ -1,3 +1,97 @@
+.PlotCalibrationCurveAndInputData <- function(
+    plot_AD,
+    xlim,
+    calibration_curve,
+    rc_determinations,
+    plot_14C_age,
+    calibration_curve_colour,
+    calibration_curve_bg,
+    interval_width,
+    bespoke_probability){
+  graphics::par(mar = c(5, 4.5, 4, 2) + 0.1, las = 1)
+  .PlotCalibrationCurve(
+    plot_AD,
+    xlim,
+    plot_14C_age,
+    calibration_curve,
+    calibration_curve_colour,
+    calibration_curve_bg,
+    interval_width,
+    bespoke_probability,
+    title = "Calendar age density estimate")
+  graphics::rug(rc_determinations, side = 2)
+}
+
+
+.PlotCalibrationCurve <- function(
+    plot_AD,
+    xlim,
+    plot_14C_age,
+    calibration_curve,
+    calibration_curve_colour,
+    calibration_curve_bg,
+    interval_width,
+    bespoke_probability,
+    title) {
+
+  cal_age_ind_min <- which.min(abs(calibration_curve$calendar_age_BP - min(xlim)))
+  cal_age_ind_max <- which.min(abs(calibration_curve$calendar_age_BP - max(xlim)))
+  calendar_age_indices <- cal_age_ind_min:cal_age_ind_max
+
+  if (plot_AD) {
+    cal_age <- 1950 - calibration_curve$calendar_age
+    xlim <- 1950 - xlim
+    x_label <- "Calendar Age (AD)"
+  } else {
+    cal_age <- calibration_curve$calendar_age
+    x_label <- "Calendar Age (cal yr BP)"
+  }
+
+  if (plot_14C_age) {
+    rc_age <- calibration_curve$c14_age
+    rc_sig <- calibration_curve$c14_sig
+    y_label <- expression(paste(""^14, "C", " age (yr BP)"))
+  } else {
+    rc_age <- calibration_curve$f14c
+    rc_sig <- calibration_curve$f14c_sig
+    y_label <- expression(paste("F ", ""^14, "C"))
+  }
+
+  # multiplier for the confidence interval if you have a standard deviation
+  zquant <- switch(
+    interval_width,
+    "1sigma" = 1,
+    "2sigma" = 2,
+    "bespoke" = - stats::qnorm((1 - bespoke_probability) / 2))
+  calibration_curve$ub <- rc_age + zquant * rc_sig
+  calibration_curve$lb <- rc_age - zquant * rc_sig
+
+  # calculate the limits for the y axis
+  ylim <- c(
+    min(calibration_curve$lb[calendar_age_indices]),
+    max(calibration_curve$ub[calendar_age_indices])
+    )
+  ylim <- ylim + 0.25 * c(-1, 1) * diff(ylim)
+
+  graphics::plot.default(
+    cal_age,
+    rc_age,
+    col = calibration_curve_colour,
+    ylim = ylim,
+    xlim = xlim,
+    xlab = x_label,
+    ylab = y_label,
+    type = "l",
+    main = title)
+  graphics::lines(cal_age, calibration_curve$ub, lty = 2, col = calibration_curve_colour)
+  graphics::lines(cal_age, calibration_curve$lb, lty = 2, col = calibration_curve_colour)
+  graphics::polygon(
+    c(rev(cal_age), cal_age),
+    c(rev(calibration_curve$lb), calibration_curve$ub),
+    col = calibration_curve_bg,
+    border = NA)
+}
+
 
 .SetUpDensityPlot <- function(plot_AD, xlim, ylim) {
   graphics::par(new = TRUE)
@@ -12,85 +106,4 @@
     axes = FALSE,
     xlab = NA,
     ylab = NA)
-}
-
-
-.PlotSPDEstimateOnCurrentPlot <- function(plot_AD, SPD, SPD_colour) {
-  if (plot_AD) {
-    cal_age <- 1950 - SPD$calendar_age
-  } else {
-    cal_age <- SPD$calendar_age
-  }
-
-  graphics::polygon(
-    c(cal_age, rev(cal_age)),
-    c(SPD$probability, rep(0, length(SPD$probability))),
-    border = NA,
-    col = SPD_colour)
-}
-
-
-.PlotDensityEstimateOnCurrentPlot <- function(
-    plot_AD, predictive_density, output_colour, show_confidence_intervals) {
-
-  if (plot_AD) {
-    cal_age <- 1950 - predictive_density$calendar_age
-  } else {
-    cal_age <- predictive_density$calendar_age
-  }
-
-  graphics::lines(cal_age, predictive_density$density_mean, col = output_colour)
-  if (show_confidence_intervals) {
-    graphics::lines(cal_age, predictive_density$density_ci_lower, col = output_colour, lty = 2)
-    graphics::lines(cal_age, predictive_density$density_ci_upper, col = output_colour, lty = 2)
-  }
-}
-
-
-.AddLegendToDensityPlot <- function(
-    output_data,
-    show_SPD,
-    show_confidence_intervals,
-    interval_width,
-    bespoke_probability,
-    calibration_curve_colour,
-    output_colours,
-    SPD_colour) {
-
-  ci_label <- switch(
-    interval_width,
-    "1sigma" = expression(paste(sigma, " interval")),
-    "2sigma"  = expression(paste("2", sigma, " interval")),
-    "bespoke" = paste0(round(100 * bespoke_probability), "% interval"))
-
-  legend_labels <- c(
-    gsub("intcal", "IntCal", output_data[[1]]$input_data$calibration_curve_name),
-    ci_label)
-  lty <- c(1, 2)
-  pch <- c(NA, NA)
-  col <- c(calibration_curve_colour, calibration_curve_colour)
-
-  for (i in seq_along(output_data)) {
-    legend_labels <- c(legend_labels, output_data[[i]]$label)
-    lty <- c(lty, 1)
-    pch <- c(pch, NA)
-    col <- c(col, output_colours[[i]])
-
-    if (show_confidence_intervals) {
-      legend_labels <- c(legend_labels, ci_label)
-      lty <- c(lty, 2)
-      pch <- c(pch, NA)
-      col <- c(col, output_colours[[i]])
-    }
-  }
-
-  if (show_SPD) {
-    legend_labels <- c(legend_labels, "SPD Estimate")
-    lty <- c(lty, -1)
-    pch <- c(pch, 15)
-    col <- c(col, SPD_colour)
-  }
-
-  graphics::legend(
-    "topright", legend = legend_labels, lty = lty, pch = pch, col = col)
 }

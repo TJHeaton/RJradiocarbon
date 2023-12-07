@@ -58,7 +58,7 @@ calendar_grid_resolution <- 10
 Test_Output <- PPcalibrate(
   rc_determinations = rc_determinations,
   rc_sigmas = rc_sigmas,
-  calibration_curve = calibration_curve,
+  calibration_curve = intcal20,
   prior_n_internal_changepoints_lambda = prior_n_internal_changepoints_lambda,
   prior_h_rate = 0.1,
   F14C_inputs = F14C_inputs,
