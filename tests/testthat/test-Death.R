@@ -29,18 +29,18 @@ test_that("Death gives expected outcomes", {
   )
 
   # Create too many initial changepoints
-  initial_n_internal_change <- 300
+  initial_n_internal_changepoints <- 300
   initial_rate_s <- sort(
     c(
       time_start,
-      runif(initial_n_internal_change,
+      runif(initial_n_internal_changepoints,
             min = time_start,
             max = time_end),
       time_end
       )
     )
   initial_rate_h <- jitter(
-    rep(true_rate_h, initial_n_internal_change + 1),
+    rep(true_rate_h, initial_n_internal_changepoints + 1),
     amount = 2
   )
 
@@ -52,7 +52,7 @@ test_that("Death gives expected outcomes", {
     rate_s,
     rate_h)
 
-  n_iters <- initial_n_internal_change - 1
+  n_iters <- initial_n_internal_changepoints - 1
 
   # Create variable to store progress
   n_changes <- rep(NA, n_iters)
@@ -150,18 +150,18 @@ test_that("Death gives same as legacy code", {
   )
 
   # Create too many initial changepoints
-  initial_n_internal_change <- 300
+  initial_n_internal_changepoints <- 300
   initial_rate_s <- sort(
     c(
       time_start,
-      runif(initial_n_internal_change,
+      runif(initial_n_internal_changepoints,
             min = time_start,
             max = time_end),
       time_end
     )
   )
   initial_rate_h <- jitter(
-    rep(true_rate_h, initial_n_internal_change + 1),
+    rep(true_rate_h, initial_n_internal_changepoints + 1),
     amount = 2
   )
   initial_integrated_rate <- .FindIntegral(

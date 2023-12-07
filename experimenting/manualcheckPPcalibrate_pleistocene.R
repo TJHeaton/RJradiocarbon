@@ -48,26 +48,34 @@ rate_h <- NA
 prior_n_internal_changepoints_lambda <- 5
 k_max_internal_changepoints <- 30
 rescale_factor_rev_jump <- 0.9
+default_prior_h_rate <- 0.1
+initial_n_internal_changepoints <- 10
+
 n_iter <- 100000
 n_thin <- 10
 F14C_inputs <- FALSE
 use_F14C_space <- FALSE
+
 calibration_curve <- intcal20
 calendar_grid_resolution <- 10
+show_progress <- TRUE
 
 Test_Output <- PPcalibrate(
   rc_determinations = rc_determinations,
   rc_sigmas = rc_sigmas,
   calibration_curve = calibration_curve,
-  prior_n_internal_changepoints_lambda = prior_n_internal_changepoints_lambda,
-  prior_h_rate = 0.1,
   F14C_inputs = F14C_inputs,
+  n_iter = n_iter,
+  n_thin = n_thin,
   use_F14C_space = use_F14C_space,
+  show_progress = show_progress,
+  calendar_grid_resolution = calendar_grid_resolution,
+  prior_n_internal_changepoints_lambda = prior_n_internal_changepoints_lambda,
   k_max_internal_changepoints = k_max_internal_changepoints,
   rescale_factor_rev_jump = rescale_factor_rev_jump,
-  calendar_grid_resolution = calendar_grid_resolution,
-  n_iter = n_iter,
-  n_thin = n_thin)
+  default_prior_h_rate = default_prior_h_rate,
+  initial_n_internal_changepoints = initial_n_internal_changepoints
+  )
 
 hist(Test_Output$n_internal_changes)
 min_cal_age <- min(Test_Output$rate_s[[1]])
