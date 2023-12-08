@@ -39,17 +39,17 @@ test_that("UpdatePoissonProcessRateRevJump gives expected outcomes", {
     rescale_factor = 0.9)
 
   # Create too many initial changepoints
-  initial_n_internal_change <- pmax(0, k_max_internal_changepoints - 5)
+  initial_n_internal_changepoints <- pmax(0, k_max_internal_changepoints - 5)
   initial_rate_s <- sort(
     c(
       time_start,
-      runif(initial_n_internal_change,
+      runif(initial_n_internal_changepoints,
             min = time_start,
             max = time_end),
       time_end
     )
   )
-  initial_rate_h <- rgamma(n = initial_n_internal_change + 1,
+  initial_rate_h <- rgamma(n = initial_n_internal_changepoints + 1,
                            shape = prior_h_shape,
                            rate = prior_h_rate)
 
@@ -156,17 +156,17 @@ test_that("UpdatePoissonProcessRateRevJump gives same as legacy code", {
   }
 
   # Create too many initial changepoints
-  initial_n_internal_change <- pmax(0, k_max_internal_changepoints - 5)
+  initial_n_internal_changepoints <- pmax(0, k_max_internal_changepoints - 5)
   initial_rate_s <- sort(
     c(
       time_start,
-      runif(initial_n_internal_change,
+      runif(initial_n_internal_changepoints,
             min = time_start,
             max = time_end),
       time_end
     )
   )
-  initial_rate_h <- rgamma(n = initial_n_internal_change + 1,
+  initial_rate_h <- rgamma(n = initial_n_internal_changepoints + 1,
                            shape = prior_h_shape,
                            rate = prior_h_rate)
 

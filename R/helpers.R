@@ -68,6 +68,43 @@
   return(calendar_range)
 }
 
+.FindBoundingCalendarRange <- function(
+    rc_determinations,
+    rc_sigmas,
+    calibration_curve,
+    F14C_inputs,
+    prob_cutoff = 0.005)
+{
+  ##############################################################################
+  ## Interpolate cal curve onto single year (regular) grid
+  ## Must be regular calendar grid for individual_possible_calendar_ranges
+  ## as this works with normalised vector of probabilities
+  integer_cal_year_curve <- carbondate::InterpolateCalibrationCurve(NA,
+                                                                    calibration_curve,
+                                                                    F14C_inputs)
+
+  # Need to ensure rc_determinations and rc_sigmas are in form of F14C_inputs
+  # This is not checked internally in this function
+  individual_possible_calendar_ranges <- mapply(
+    .FindCalendarRangeForSingleDetermination,
+    rc_determinations,
+    rc_sigmas,
+    MoreArgs = list(
+      F14C_inputs = F14C_inputs,
+      calibration_curve = integer_cal_year_curve,
+      prob_cutoff = prob_cutoff))
+
+  min_potential_calendar_age <- min(
+    individual_possible_calendar_ranges[1,])
+  max_potential_calendar_age <- max(
+    individual_possible_calendar_ranges[2,])
+
+  cal_age_range <- c(min_potential_calendar_age,
+                      max_potential_calendar_age)
+
+  return(cal_age_range)
+}
+
 
 
 

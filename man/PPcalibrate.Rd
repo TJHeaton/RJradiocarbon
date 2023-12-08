@@ -13,15 +13,17 @@ PPcalibrate(
   n_thin = 10,
   use_F14C_space = TRUE,
   show_progress = TRUE,
-  sensible_initialisation = TRUE,
+  sensible_prior_rate_initialisation = TRUE,
   calendar_grid_resolution = 1,
   calendar_age_range = NA,
   rate_s = NA,
   rate_h = NA,
   prior_n_internal_changepoints_lambda = NA,
+  prior_h_shape = 0.1,
   prior_h_rate = 0.1,
   k_max_internal_changepoints = NA,
   rescale_factor_rev_jump = 0.9,
+  initial_n_internal_changepoints = 10,
   calendar_ages = NA
 )
 }
@@ -51,8 +53,8 @@ If FALSE, calculations are carried out in 14C yr BP space.}
 \item{show_progress}{Whether to show a progress bar in the console during
 execution. Default is \code{TRUE}.}
 
-\item{sensible_initialisation}{Whether to use sensible start values and
-adaptive prior on \eqn{\mu_{\phi}} and  (A, B).
+\item{sensible_prior_rate_initialisation}{Whether to use adaptive estimates for
+prior_h_shape and prior_h_rate (on the values of PP rate in any interval)
 If this is \code{TRUE} (the default), then all the remaining arguments below are
 ignored.}
 
@@ -63,20 +65,22 @@ the ages of the samples, e.g. t, t + resolution, t + 2 * resolution, ..}
 for the calendar ages of the samples, i.e. range_1 < theta < range_2.
 Required if \code{sensible_initialisation} is \code{FALSE}.}
 
-\item{rate_s, rate_h}{Initial parameters to define/specify the poisson process rate
-(jumps and heights).}
-
 \item{prior_n_internal_changepoints_lambda}{Prior on Poisson parameter specifying
 n_internal_changepoints ~ Po(prior_n_internal_changepoints_lambda)}
 
-\item{prior_h_rate}{Prior for Poisson Process rate height in any interval
+\item{prior_h_shape, prior_h_rate}{Prior for Poisson Process rate height in any interval
 rate_h ~ Gamma(shape = prior_h_shape, rate = prior_h_rate)
-prior_h_shape is chosen adaptively/internally to match n_observations}
+If choose sensible_initialisation then prior_h_shape is selected adaptively (internally)
+to match n_observations (and selecting prior_h_rate = 0.1 to provide diffuse prior)}
 
 \item{k_max_internal_changepoints}{Maximum permitted number of internal changepoints}
 
 \item{rescale_factor_rev_jump}{Factor weighting probability of dimension change
 in the reversible jump update step for poisson process rate_h and rate_s}
+
+\item{initial_n_internal_changepoints}{Number of internal changepoints to initialise
+the sampler with. The default is 10 (so diffuse).
+Will place them randomly within calendar interval}
 
 \item{calendar_ages}{The initial estimate for the underlying calendar ages
 (optional). If supplied it must be a vector with the same length as
