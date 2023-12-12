@@ -45,20 +45,23 @@ rate_s <- NA
 rate_h <- NA
 
 ######
-prior_n_internal_changepoints_lambda <- 0.01
+prior_n_internal_changepoints_lambda <- 5
 k_max_internal_changepoints <- 30
 rescale_factor_rev_jump <- 0.9
 default_prior_h_rate <- 0.1
-initial_n_internal_changepoints <- 2
+initial_n_internal_changepoints <- 10
 
-n_iter <- 10000
+n_iter <- 50000
 n_thin <- 10
 F14C_inputs <- FALSE
-use_F14C_space <- FALSE
+use_F14C_space <- TRUE
 
 calibration_curve <- intcal20
 calendar_grid_resolution <- 10
 show_progress <- TRUE
+
+set.seed(14)
+# set.seed(19)
 
 Test_Output <- PPcalibrate(
   rc_determinations = rc_determinations,
@@ -83,15 +86,15 @@ hist(Test_Output$n_internal_changes)
 min_cal_age <- min(Test_Output$rate_s[[1]])
 max_cal_age <- max(Test_Output$rate_s[[1]])
 n_out <- length(Test_Output$n_internal_changes)
-
+n_burn <- floor(n_out/2)
 t_star <- seq(min_cal_age, max_cal_age, by = 5)
 
 set.seed(25)
 n_curves <- 2000
 indices <- sample(
-  1:n_out,
+  n_burn:n_out,
   n_curves,
-  replace = (n_out < n_curves))
+  replace = ((n_out - n_burn) < n_curves))
 rate <- matrix(NA, nrow = n_curves, ncol = length(t_star))
 
 for(i in 1:n_curves) {

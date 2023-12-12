@@ -156,12 +156,15 @@ PPcalibrate <- function(
   calendar_age_interval_length <- max_potential_calendar_age - min_potential_calendar_age
   n_determinations <- length(rc_determinations)
 
+  # TODO - Check these values sensible with resolution
   if(is.na(prior_h_shape)) {
     ####################################
     ## Create initial values for hyperparameters on Poisson process rate
     initial_estimate_mean_rate <- n_determinations / calendar_age_interval_length
-    prior_h_rate <- default_prior_h_rate # Determines diffusivity Var[rate_h] = (mean_rate/prior_h_rate)
-    prior_h_shape <- initial_estimate_mean_rate / prior_h_rate
+    prior_h_rate <- default_prior_h_rate # Determines diffusivity Var[rate_h] = (prior_h_shape/prior_h_rate^2)
+    # TODO - Decide if match the mode or the mean?
+    # prior_h_shape <- initial_estimate_mean_rate * prior_h_rate # Match the mean
+    prior_h_shape <- 1 + initial_estimate_mean_rate * prior_h_rate # Match the mode
   }
 
   ## Create initial change points and heights for Poisson process rate
@@ -175,11 +178,13 @@ PPcalibrate <- function(
       max_potential_calendar_age
     )
   )
-  initial_rate_h <- stats::rgamma(
-    n = initial_n_internal_changepoints + 1,
-    shape =  prior_h_shape,
-    rate = prior_h_rate
-  )
+  initial_rate_h <- rep(prior_h_shape/prior_h_rate,
+                        times = initial_n_internal_changepoints + 1)
+  # initial_rate_h <- stats::rgamma(
+  #    n = initial_n_internal_changepoints + 1,
+  #    shape =  prior_h_shape,
+  #    rate = prior_h_rate
+  #  )
 
   initial_integrated_rate <- .FindIntegral(
     rate_s = initial_rate_s,
