@@ -160,14 +160,10 @@ PPcalibrate <- function(
 
   # TODO - Check these values need altering with/incorporation of grid resolution
   if(is.na(prior_h_shape)) {
-    ####################################
-    ## Create initial values for hyperparameters on Poisson process rate
-    prior_h_rate <- default_prior_h_rate # Determines diffusivity Var[rate_h] = (prior_h_shape/prior_h_rate^2)
-    # Match the mode of the prior on rate_h [(prior_h_shape - 1)/ prior_rate_h]
-    # to initial_estimate_mean_rate above
-    prior_h_shape <- 1 + initial_estimate_mean_rate * prior_h_rate
-    # More robust than matching mean (i.e. prior_h_shape/prior_h_rate) to mean
-    # as that prior on rate_h places almost all mass at 0
+    # Choose exponential distribution
+    # and match mean with initial_estimate_mean_rate above
+    prior_h_shape <- 1
+    prior_h_rate <- 1 / initial_estimate_mean_rate
   }
 
   #############
