@@ -29,13 +29,19 @@ PlotPosteriorChangePoints <- function(
     n_end = NA,
     kernel_bandwith = NA) {
 
-  # TODO : check not more than 4 for n_changes
-
+  n_iter <- output_data$input_parameters$n_iter
   n_thin <- output_data$input_parameters$n_thin
-  n_out <- length(output_data$n_internal_changes)
 
-  if (is.na(n_burn)) { n_burn <- floor(n_out / 2) } else { n_burn <- floor(n_burn / n_thin) }
-  if (is.na(n_end)) { n_end <- n_out } else { n_end <- floor(n_end / n_thin) }
+  arg_check <- .InitializeErrorList()
+  .CheckRJPPOutputData(arg_check, output_data)
+  .CheckIntegerVector(arg_check, n_changes, lower = 1, upper = 4, max_length = 4)
+  .CheckInteger(arg_check, n_posterior_samples, lower = 10)
+  .CheckIntervalWidth(arg_check, interval_width, bespoke_probability)
+  .CheckNBurnAndNEnd(arg_check, n_burn, n_end, n_iter, n_thin)
+  .ReportErrors(arg_check)
+
+  n_burn <- .SetNBurn(n_burn, n_iter, n_thin)
+  n_end <- .SetNEnd(n_end, n_iter, n_thin)
 
   max_density <- 0
   all_densities <- list()
