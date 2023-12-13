@@ -156,14 +156,17 @@ PPcalibrate <- function(
   calendar_age_interval_length <- max_potential_calendar_age - min_potential_calendar_age
   n_determinations <- length(rc_determinations)
 
+  initial_estimate_mean_rate <- n_determinations / calendar_age_interval_length
+
+  # TODO - Check these values need altering with/incorporation of grid resolution
   if(is.na(prior_h_shape)) {
-    ####################################
-    ## Create initial values for hyperparameters on Poisson process rate
-    initial_estimate_mean_rate <- n_determinations / calendar_age_interval_length
-    prior_h_rate <- default_prior_h_rate # Determines diffusivity Var[rate_h] = (mean_rate/prior_h_rate)
-    prior_h_shape <- initial_estimate_mean_rate / prior_h_rate
+    # Choose exponential distribution
+    # and match mean with initial_estimate_mean_rate above
+    prior_h_shape <- 1
+    prior_h_rate <- 1 / initial_estimate_mean_rate
   }
 
+  #############
   ## Create initial change points and heights for Poisson process rate
   ## Randomly place initial_n_internal_changepoints
   initial_rate_s <- sort(
@@ -175,11 +178,15 @@ PPcalibrate <- function(
       max_potential_calendar_age
     )
   )
-  initial_rate_h <- stats::rgamma(
-    n = initial_n_internal_changepoints + 1,
-    shape =  prior_h_shape,
-    rate = prior_h_rate
-  )
+
+  # Create diverse initial_rate_h centred on initial_estimate_mean_rate
+  # Requires safe setting as as will crash if any sampled rate_h values are zero
+  initial_rate_h <- rep(initial_estimate_mean_rate,
+                        times = initial_n_internal_changepoints + 1)
+  initial_rate_h_log_multiplier <- stats::runif(n = initial_n_internal_changepoints + 1,
+                                                min = -1,
+                                                max = 1)
+  initial_rate_h <- exp(initial_rate_h_log_multiplier) * initial_rate_h
 
   initial_integrated_rate <- .FindIntegral(
     rate_s = initial_rate_s,
