@@ -2,6 +2,7 @@
 
 export(PPcalibrate)
 export(PlotPosteriorChangePoints)
+export(PlotPosteriorHeights)
 export(PlotPosteriorMeanRate)
 export(UpdateCalendarAgesGibbs)
 export(UpdatePoissonProcessRateRevJump)

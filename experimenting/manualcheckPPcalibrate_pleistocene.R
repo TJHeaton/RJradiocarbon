@@ -149,10 +149,10 @@ for (n_change in n_changes_plot) {
   # Do nothing if no posterior samples with this number of changepoints
   if(length(index) == 0) next
 
-  extracted_posteriors <- do.call(rbind, Test_Output$rate_s[index])
+  extracted_posteriors <- do.call(rbind, Test_Output$rate_h[index])
 
   # Otherwise extract the rates
-  for (j in 2:(n_change + 1)) {
+  for (j in 1:(n_change + 1)) {
     # 1) Extract all posteriors with correct internal changes
     # 2) Pull out jth value in the ordered list of changepoints
     # 3) Plot kde of the densoty of jth value
@@ -161,14 +161,14 @@ for (n_change in n_changes_plot) {
     hist(
       extracted_posteriors[, j],
       main = paste("extracted posteriors for:", n_change, j),
-      freq = FALSE,
-      breaks = seq(
-        Test_Output$input_parameters$pp_cal_age_range[1],
-        Test_Output$input_parameters$pp_cal_age_range[2],
-        by = 100),
-      xlim = rev(range(Test_Output$calendar_ages)))
+      freq = FALSE)
+      # breaks = seq(
+      #   Test_Output$input_parameters$pp_cal_age_range[1],
+      #   Test_Output$input_parameters$pp_cal_age_range[2],
+      #   by = 100),
+      # xlim = rev(range(Test_Output$calendar_ages)))
     tryCatch({
-      smoothed_density <- stats::density(extracted_posteriors[, j], bw = 0.05 * diff(Test_Output$input_parameters$pp_cal_age_range))
+      smoothed_density <- stats::density(extracted_posteriors[, j], bw = 5e-4)
       graphics::lines(smoothed_density, lwd = n_change, col = "blue")
     },
     error = function(cond) {
