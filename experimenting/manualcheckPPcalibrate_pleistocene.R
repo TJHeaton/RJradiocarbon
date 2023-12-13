@@ -51,7 +51,7 @@ rescale_factor_rev_jump <- 0.9
 default_prior_h_rate <- 0.1
 initial_n_internal_changepoints <- 2
 
-n_iter <- 10000
+n_iter <- 100000
 n_thin <- 10
 F14C_inputs <- FALSE
 use_F14C_space <- FALSE
@@ -131,30 +131,43 @@ axis(1,
 # Plot 1 to show where the changepoints occur conditional on number
 
 # Select vector to specify which n_internal_changes you want to add to the plot
-which_n_changes_plot <- c(1,2,3) # Mimics Green paper
+n_changes_plot <- c(1,2,3) # Mimics Green paper
 
-for(n_change in n_changes_plot) {
+for (n_change in n_changes_plot) {
   index <- which(Test_Output$n_internal_changes == n_change)
 
   # Do nothing if no posterior samples with this number of changepoints
-  if(length(index) == 0) continue
+  if(length(index) == 0) next
+
+  extracted_posteriors <- do.call(rbind, Test_Output$rate_s[index])
 
   # Otherwise extract the rates
-  for(j in (1 + 1:n_change)) {
+  for (j in 2:(n_change + 1)) {
     # 1) Extract all posteriors with correct internal changes
-    Test_Output$rate_s[index]
     # 2) Pull out jth value in the ordered list of changepoints
     # 3) Plot kde of the densoty of jth value
     # Choose plotting lty (and col) to vary according to nchanges
-
     # Note that we do not have any examples with n_internal small
+    hist(
+      extracted_posteriors[, j],
+      main = paste("extracted posteriors for:", n_change, j),
+      freq = FALSE,
+      breaks = seq(
+        Test_Output$input_parameters$pp_cal_age_range[1],
+        Test_Output$input_parameters$pp_cal_age_range[2],
+        by = 100),
+      xlim = rev(range(Test_Output$calendar_ages)))
+    tryCatch({
+      smoothed_density <- stats::density(extracted_posteriors[, j], bw = 0.05 * diff(Test_Output$input_parameters$pp_cal_age_range))
+      graphics::lines(smoothed_density, lwd = n_change, col = "blue")
+    },
+    error = function(cond) {
+      message(paste("Could not calculate density for:", n_change, j))
+      message("Here's the original error message:")
+      message(conditionMessage(cond))
+      # Choose a return value in case of error
+    })
 
-    smoothed_density <- stats::density(Test_Output$rate_s[index][j])
-
-      [j], bw = "SJ")
-    graphics::lines(smoothed_density,
-                    lwd = n_change,
-                    col = "blue")
   }
 }
 
@@ -166,16 +179,3 @@ for(n_change in n_changes_plot) {
 ## This will give Fig 3 and Fig 4
 ## It will get confusing for large numbers of changes
 ## (so perhaps note that tells people not to choose more than 3/4)
-
-
-
-
-
-
-
-
-
-
-
-
-rm(true_theta, n_observed)
