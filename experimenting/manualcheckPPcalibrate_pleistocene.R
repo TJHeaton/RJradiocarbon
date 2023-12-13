@@ -5,7 +5,7 @@
 # We select 14C dates that lie between [6, 25] 14Cyrs BP
 
 ##############################################
-Species <- "Mammoth" # "Equus" or "Human" or "Mammoth" or "Bison" or "Alces" or "Cervus"
+Species <- "Bison" # "Equus" or "Human" or "Mammoth" or "Bison" or "Alces" or "Cervus"
 
 # Main function - you just enter the species and the calibration curve you want (interpolated onto a 5 yearly grid)
 cutoffages <- c(6000, 25000)
@@ -60,8 +60,9 @@ prior_h_shape <- NA
 prior_h_rate <- NA
 
 calibration_curve <- intcal20
-calendar_age_range <- c(6680, 30000)
+calendar_age_range <- NA # c(6680, 30000)
 calendar_grid_resolution <- 10
+grid_extension_factor <- 0.1
 show_progress <- TRUE
 
 #set.seed(14)
@@ -84,7 +85,8 @@ Test_Output <- PPcalibrate(
   k_max_internal_changepoints = k_max_internal_changepoints,
   rescale_factor_rev_jump = rescale_factor_rev_jump,
   default_prior_h_rate = default_prior_h_rate,
-  initial_n_internal_changepoints = initial_n_internal_changepoints
+  initial_n_internal_changepoints = initial_n_internal_changepoints,
+  grid_extension_factor = grid_extension_factor
   )
 
 ###########################################################
