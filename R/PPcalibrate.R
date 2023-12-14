@@ -57,6 +57,10 @@
 #' the sampler with. The default is 10 (so diffuse).
 #' Will place them randomly within calendar interval
 #'
+#' @param grid_extension_factor If you adaptively select the calendar_age_range from
+#' rc_determinations, how far you wish to extend the grid beyond this adaptive minimum and maximum
+#' The final range will be extended (eqaully on both sides) to cover (1 + grid_extension_factor) * (calendar_age_range)
+#'
 #'
 #' @return TODO
 #' @export
@@ -80,7 +84,8 @@ PPcalibrate <- function(
     rescale_factor_rev_jump = 0.9,
     bounding_range_prob_cutoff = 0.005,
     default_prior_h_rate = 0.1,
-    initial_n_internal_changepoints = 10) {
+    initial_n_internal_changepoints = 10,
+    grid_extension_factor = 0.1) {
 
   # TODO - Check both prior_h_shape and prior_h_rate specified (or both NA)
   # TODO - Check initial_n_internal_changepoints < k_max
@@ -122,6 +127,25 @@ PPcalibrate <- function(
   if(any(is.na(calendar_age_range))) {
     min_potential_calendar_age <- min(bounds_calendar_range)
     max_potential_calendar_age <- max(bounds_calendar_range)
+
+    # Extend by grid_extension_factor
+    mean_potential_calendar_age <- mean(bounds_calendar_range)
+    min_potential_calendar_age <- (
+      min_potential_calendar_age - grid_extension_factor * (
+        mean_potential_calendar_age - min_potential_calendar_age
+      )
+    )
+    max_potential_calendar_age <- (
+      max_potential_calendar_age + grid_extension_factor * (
+        max_potential_calendar_age - mean_potential_calendar_age
+      )
+    )
+
+    # Do not extend beyond calibration curve calendar limits
+    min_potential_calendar_age <- max(min_potential_calendar_age,
+                                      min(calibration_curve$calendar_age_BP))
+    max_potential_calendar_age <- min(max_potential_calendar_age,
+                                      max(calibration_curve$calendar_age_BP))
   } else {
     ## Create calendar_age_grid covering potential calendar ages
     min_potential_calendar_age <- min(calendar_age_range)
@@ -158,7 +182,6 @@ PPcalibrate <- function(
 
   initial_estimate_mean_rate <- n_determinations / calendar_age_interval_length
 
-  # TODO - Check these values need altering with/incorporation of grid resolution
   if(is.na(prior_h_shape)) {
     # Choose exponential distribution
     # and match mean with initial_estimate_mean_rate above
@@ -237,7 +260,7 @@ PPcalibrate <- function(
 
   ####################################
   # Create storage for output
-  n_out <- floor(n_iter / n_thin)
+  n_out <- floor(n_iter / n_thin) + 1
 
   rate_s_out <- list(rate_s)
   rate_h_out <- list(rate_h)
@@ -245,8 +268,19 @@ PPcalibrate <- function(
   theta_out <- matrix(NA, nrow = n_out, ncol = num_observations)
 
   output_index <- 1
-  n_internal_changes[1] <- length(rate_h)
-  theta_out[1, ] <- calendar_ages
+  n_internal_changes[output_index] <- length(rate_h) - 1
+
+  ## Store calendar_ages given initial_rate_s and initial_rate_h
+  ## (sample from exactly using Gibbs)
+  calendar_ages <- UpdateCalendarAgesGibbs(
+    likelihood_calendar_ages_from_calibration_curve = likelihood_calendar_ages_from_calibration_curve,
+    calendar_age_grid = calendar_age_grid,
+    rate_s = rate_s,
+    rate_h = rate_h
+  )
+  theta_out[output_index, ] <- calendar_ages
+
+
 
   #####################################
   # Perform MCMC - RJMCMC within Gibbs
