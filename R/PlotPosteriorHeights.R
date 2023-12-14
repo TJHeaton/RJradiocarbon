@@ -3,7 +3,7 @@
 #' Description here
 #'
 #' @inheritParams PlotPosteriorChangePoints
-#' @param kernel_bandwith The bandwidth used for the KDE of the density (optional). If not give 1/50th of the
+#' @param kernel_bandwidth The bandwidth used for the KDE of the density (optional). If not give 1/50th of the
 #' maximum height will be used.
 #'
 #' @export

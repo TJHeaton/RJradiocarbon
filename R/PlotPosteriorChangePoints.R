@@ -13,7 +13,7 @@
 #' arguments given to [RJradiocarbon::PPcalibrate]).
 #' @param n_end The iteration number of the last sample to use. Assumed to be the number of iterations
 #' if not given.
-#' @param kernel_bandwith The bandwidth used for the KDE of the density (optional). If not give 1/50th of the
+#' @param kernel_bandwidth The bandwidth used for the KDE of the density (optional). If not give 1/50th of the
 #' calendar age range will be used.
 #'
 #'
@@ -27,7 +27,7 @@ PlotPosteriorChangePoints <- function(
     n_changes = c(1, 2, 3),
     n_burn = NA,
     n_end = NA,
-    kernel_bandwith = NA) {
+    kernel_bandwidth = NA) {
 
   n_iter <- output_data$input_parameters$n_iter
   n_thin <- output_data$input_parameters$n_thin
@@ -49,7 +49,7 @@ PlotPosteriorChangePoints <- function(
   posterior_rate_s <- output_data$rate_s[n_burn:n_end]
 
   cal_age_range <- sort(output_data$input_parameters$pp_cal_age_range)
-  if (is.na(kernel_bandwith)) kernel_bandwith <- diff(cal_age_range) / 50
+  if (is.na(kernel_bandwidth)) kernel_bandwidth <- diff(cal_age_range) / 50
 
   colors <- c("blue", "darkgreen", "red", "purple")
   legend <- NULL
@@ -64,7 +64,7 @@ PlotPosteriorChangePoints <- function(
     for (j in 2:(n_change + 1)) {
       tryCatch({
         smoothed_density <- stats::density(
-          extracted_posteriors[, j], bw = kernel_bandwith, from = cal_age_range[1], to = cal_age_range[2])
+          extracted_posteriors[, j], bw = kernel_bandwidth, from = cal_age_range[1], to = cal_age_range[2])
         if (max(smoothed_density$y) > max_density) max_density <- max(smoothed_density$y)
         this_line <- list(x = smoothed_density$x, y = smoothed_density$y, n_change = n_change, j = j)
         all_densities  <- append(all_densities, list(this_line))
