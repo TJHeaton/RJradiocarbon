@@ -113,6 +113,9 @@ PlotPosteriorMeanRate <- function(
 
   calendar_age_sequence <- seq(
     from = min(output_data$rate_s[[1]]), to = max(output_data$rate_s[[1]]), length.out = n_calc)
+  xlim <- rev(range(calendar_age_sequence))
+
+  calendar_age_sequence[n_calc] <- calendar_age_sequence[n_calc] - 1e-6 * diff(calendar_age_sequence)[1]
   plot_AD <- any(calendar_age_sequence < 0)
   ##############################################################################
   # Calculate means and rate
@@ -144,9 +147,6 @@ PlotPosteriorMeanRate <- function(
     rate_ci_upper = apply(rate, 2, stats::quantile, probs = 1 - edge_width)
   )
 
-  ##############################################################################
-  # Calculate plot scaling
-  xlim <- rev(range(calendar_age_sequence))
   ylim_rate <- c(0, denscale * max(posterior_rate$rate_mean))
 
   ##############################################################################
