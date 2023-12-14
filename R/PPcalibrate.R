@@ -340,6 +340,7 @@ PPcalibrate <- function(
     rate_h = rate_h_out,
     calendar_ages = theta_out,
     n_internal_changes = n_internal_changes,
+    update_type = "RJPP",
     input_data = input_data,
     input_parameters = input_parameters)
 
