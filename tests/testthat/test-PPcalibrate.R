@@ -1,6 +1,5 @@
 test_that("PPcalibrate gives expected outcomes", {
-  # TODO check plots are in terms of n - not grid
-  # TODO fix end points for max(rate_h)
+
 
   # Checking
   set.seed(15)
