@@ -260,14 +260,27 @@ PPcalibrate <- function(
 
   ####################################
   # Create storage for output
-  n_out <- floor(n_iter / n_thin)
+  n_out <- floor(n_iter / n_thin) + 1
 
   rate_s_out <- list(rate_s)
   rate_h_out <- list(rate_h)
   n_internal_changes <- rep(NA, length = n_out)
   theta_out <- matrix(NA, nrow = n_out, ncol = num_observations)
 
-  output_index <- 0
+  output_index <- 1
+  n_internal_changes[output_index] <- length(rate_h) - 1
+
+  ## Store calendar_ages given initial_rate_s and initial_rate_h
+  ## (sample from exactly using Gibbs)
+  calendar_ages <- UpdateCalendarAgesGibbs(
+    likelihood_calendar_ages_from_calibration_curve = likelihood_calendar_ages_from_calibration_curve,
+    calendar_age_grid = calendar_age_grid,
+    rate_s = rate_s,
+    rate_h = rate_h
+  )
+  theta_out[output_index, ] <- calendar_ages
+
+
 
   #####################################
   # Perform MCMC - RJMCMC within Gibbs
