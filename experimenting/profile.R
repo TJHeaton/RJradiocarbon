@@ -20,17 +20,18 @@ rc_sigmas <- data$X1..Sigma
 
 rm(keep, data, removena)
 
-Rprof(paste0("profiling/", file_pref, ".out"))
+Rprof(paste0("experimenting/", file_pref, ".out"))
 
-Test_Output <- PPcalibrate(rc_determinations, rc_sigmas, intcal20, n_iter = 1e4, n_thin = 10)
+Test_Output <- PPcalibrate(
+  rc_determinations, rc_sigmas, intcal20, n_iter = 1e4, n_thin = 10, calendar_grid_resolution = 10)
 
 Rprof(NULL)
 
-pd <- readProfileData(paste0("profiling/", file_pref, ".out"))
+pd <- readProfileData(paste0("experimenting/", file_pref, ".out"))
 flat_profile <- flatProfile(pd)
 print(flat_profile)
-save(flat_profile, file= paste0("profiling/", file_pref, ".rda"))
+save(flat_profile, file= paste0("experimenting/", file_pref, ".rda"))
 
-profileCallGraph2Dot(pd, score = "total", filename = paste0("profiling/", file_pref, ".dot"))
+profileCallGraph2Dot(pd, score = "total", filename = paste0("experimenting/", file_pref, ".dot"))
 
 
