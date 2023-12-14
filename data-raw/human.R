@@ -5,7 +5,7 @@ raw_data <- read.csv("data-raw/Humanc14Dates.csv",
                  header = TRUE,
                  na.strings = c("", "greater than"))
 
-cutoffages <- c(6000, 18000)
+source("data-raw/cutoff_ages.R")
 
 keep <- which(raw_data$X14C < cutoffages[2] & raw_data$X14C > cutoffages[1])
 raw_data <- raw_data[keep,]
