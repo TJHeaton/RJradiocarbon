@@ -35,9 +35,8 @@ PlotPosteriorChangePoints <- function(
   arg_check <- .InitializeErrorList()
   .CheckRJPPOutputData(arg_check, output_data)
   .CheckIntegerVector(arg_check, n_changes, lower = 1, upper = 4, max_length = 4)
-  .CheckInteger(arg_check, n_posterior_samples, lower = 10)
-  .CheckIntervalWidth(arg_check, interval_width, bespoke_probability)
   .CheckNBurnAndNEnd(arg_check, n_burn, n_end, n_iter, n_thin)
+  if (!is.na(kernel_bandwidth)) .CheckNumber(arg_check, kernel_bandwidth, lower = 0)
   .ReportErrors(arg_check)
 
   n_burn <- .SetNBurn(n_burn, n_iter, n_thin)
@@ -67,9 +66,7 @@ PlotPosteriorChangePoints <- function(
         smoothed_density <- stats::density(
           extracted_posteriors[, j], bw = kernel_bandwith, from = cal_age_range[1], to = cal_age_range[2])
         if (max(smoothed_density$y) > max_density) max_density <- max(smoothed_density$y)
-        this_line <- list(
-          x = smoothed_density$x, y = smoothed_density$y, n_change = n_change, j = j
-        )
+        this_line <- list(x = smoothed_density$x, y = smoothed_density$y, n_change = n_change, j = j)
         all_densities  <- append(all_densities, list(this_line))
       },
       error = function(cond) {

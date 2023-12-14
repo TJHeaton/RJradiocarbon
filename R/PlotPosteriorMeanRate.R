@@ -69,9 +69,14 @@ PlotPosteriorMeanRate <- function(
 
   arg_check <- .InitializeErrorList()
   .CheckRJPPOutputData(arg_check, output_data)
-  .CheckCalibrationCurveFromOutput(arg_check, output_data, calibration_curve)
   .CheckInteger(arg_check, n_posterior_samples, lower = 10)
+  .CheckCalibrationCurveFromOutput(arg_check, output_data, calibration_curve)
+  .CheckFlag(arg_check, plot_14C_age)
+  .CheckFlag(arg_check, show_individual_means)
+  .CheckFlag(arg_check, show_confidence_intervals)
   .CheckIntervalWidth(arg_check, interval_width, bespoke_probability)
+  .CheckNumber(arg_check, denscale, lower = 0)
+  .CheckInteger(arg_check, n_calc, lower = 20)
   .CheckNBurnAndNEnd(arg_check, n_burn, n_end, n_iter, n_thin)
   .ReportErrors(arg_check)
 
