@@ -246,8 +246,6 @@ PPcalibrate <- function(
       calibration_curve = calibration_curve)
   )
 
-  browser()
-
   num_observations <- length(rc_determinations)
 
   # Set starting values to be initialised ones
