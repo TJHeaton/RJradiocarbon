@@ -22,7 +22,8 @@ PPcalibrate(
   rescale_factor_rev_jump = 0.9,
   bounding_range_prob_cutoff = 0.005,
   default_prior_h_rate = 0.1,
-  initial_n_internal_changepoints = 10
+  initial_n_internal_changepoints = 10,
+  grid_extension_factor = 0.1
 )
 }
 \arguments{
@@ -82,6 +83,10 @@ Smaller values of default_prior_h_rate will mean more diverse prior}
 \item{initial_n_internal_changepoints}{Number of internal changepoints to initialise
 the sampler with. The default is 10 (so diffuse).
 Will place them randomly within calendar interval}
+
+\item{grid_extension_factor}{If you adaptively select the calendar_age_range from
+rc_determinations, how far you wish to extend the grid beyond this adaptive minimum and maximum
+The final range will be extended (eqaully on both sides) to cover (1 + grid_extension_factor) * (calendar_age_range)}
 }
 \value{
 TODO

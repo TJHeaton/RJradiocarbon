@@ -1,1 +1,1 @@
-cutoff_age <- c(6000, 18000)
+cutoff_ages <- c(6000, 25000)
