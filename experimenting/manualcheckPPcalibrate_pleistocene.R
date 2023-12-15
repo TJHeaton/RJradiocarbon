@@ -89,5 +89,5 @@ Test_Output <- PPcalibrate(
   )
 
 PlotPosteriorMeanRate(Test_Output)
-PlotPosteriorChangePoints(Test_Output)
-PlotPosteriorHeights(Test_Output)
+PlotPosteriorChangePoints(Test_Output, n_changes = c(4, 5, 6))
+PlotPosteriorHeights(Test_Output, n_changes = c(4, 5, 6))
