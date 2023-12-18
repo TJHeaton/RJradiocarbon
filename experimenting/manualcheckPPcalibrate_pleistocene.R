@@ -5,7 +5,7 @@
 # We select 14C dates that lie between [6, 25] 14Cyrs BP
 
 ##############################################
-Species <- "Human" # "Equus" or "Human" or "Mammoth" or "Bison" or "Alces" or "Cervus"
+Species <- "Mammoth" # "Equus" or "Human" or "Mammoth" or "Bison" or "Alces" or "Cervus"
 
 # Main function - you just enter the species and the calibration curve you want (interpolated onto a 5 yearly grid)
 cutoffages <- c(6000, 25000)
