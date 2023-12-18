@@ -28,7 +28,7 @@ arguments given to \link{PPcalibrate}).}
 \item{n_end}{The iteration number of the last sample to use. Assumed to be the number of iterations
 if not given.}
 
-\item{kernel_bandwith}{The bandwidth used for the KDE of the density (optional). If not give 1/50th of the
+\item{kernel_bandwidth}{The bandwidth used for the KDE of the density (optional). If not give 1/50th of the
 maximum height will be used.}
 }
 \description{

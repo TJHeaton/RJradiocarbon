@@ -18,7 +18,7 @@ if(Species == "Human") {
   data <- read.csv("experimenting/AnimalExtinctions/Equusc14Dates.csv", header = TRUE, na.strings = c("", "greater than", "NA"),
                    colClasses = c("factor", "factor", "factor", "numeric", "numeric"))
 } else if(Species == "Mammoth") {
-  data <- read.csv("experimenting/AnimalExtinctions/Mammothc14Dates.csv", header = TRUE, na.strings = c("", "greater than"))
+  data <- read.csv("experimenting/AnimalExtinctions/Mammuthusc14Dates.csv", header = TRUE, na.strings = c("", "greater than"))
 } else if(Species == "Alces") { # Moose/Elk
   data <- read.csv("experimenting/AnimalExtinctions/Alcesc14Dates.csv", header = TRUE, na.strings = c("", "greater than"))
 } else if(Species == "Cervus") { # Dog
@@ -51,7 +51,7 @@ rescale_factor_rev_jump <- 0.9
 default_prior_h_rate <- 0.1
 initial_n_internal_changepoints <- 10
 
-n_iter <- 1000
+n_iter <- 10000
 n_thin <- 10
 F14C_inputs <- FALSE
 use_F14C_space <- TRUE
@@ -60,7 +60,7 @@ prior_h_shape <- NA
 prior_h_rate <- NA
 
 calendar_age_range <- NA # c(6680, 30000)
-calendar_grid_resolution <- 1
+calendar_grid_resolution <- 10
 grid_extension_factor <- 0.1
 show_progress <- TRUE
 
@@ -89,5 +89,5 @@ Test_Output <- PPcalibrate(
   )
 
 PlotPosteriorMeanRate(Test_Output)
-PlotPosteriorChangePoints(Test_Output, n_changes = c(4, 5, 6))
-PlotPosteriorHeights(Test_Output, n_changes = c(4, 5, 6))
+PlotPosteriorChangePoints(Test_Output)
+PlotPosteriorHeights(Test_Output)
