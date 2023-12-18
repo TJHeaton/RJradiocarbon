@@ -66,6 +66,10 @@
 #' @return TODO
 #' @export
 #'
+#' TODO - Axis labels for posterior mean rate 14C yr BP
+#' TODO - Axis labels for posterior locations - cal yr BP
+#' TODO - Axis labels for posterior height - events per cal yr
+#'
 #' @examples # TODO
 PPcalibrate <- function(
     rc_determinations,
