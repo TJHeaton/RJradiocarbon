@@ -34,8 +34,8 @@ PlotPosteriorHeights <- function(
   max_density <- 0
   all_densities <- list()
 
-  posterior_n_internal_changes <- output_data$n_internal_changes[n_burn:n_end]
-  posterior_rate_h <- output_data$rate_h[n_burn:n_end]
+  posterior_n_internal_changes <- output_data$n_internal_changes[n_burn + 1:n_end]
+  posterior_rate_h <- output_data$rate_h[n_burn + 1:n_end]
 
   max_height <- 0
   for (n_change in n_changes) {

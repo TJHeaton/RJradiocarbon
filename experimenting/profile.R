@@ -23,7 +23,7 @@ rm(keep, data, removena)
 Rprof(paste0("experimenting/", file_pref, ".out"))
 
 Test_Output <- PPcalibrate(
-  rc_determinations, rc_sigmas, intcal20, n_iter = 1e4, n_thin = 10, calendar_grid_resolution = 10, use_fast = TRUE)
+  rc_determinations, rc_sigmas, intcal20, n_iter = 1e5, n_thin = 10, calendar_grid_resolution = 10, use_fast = TRUE)
 
 Rprof(NULL)
 

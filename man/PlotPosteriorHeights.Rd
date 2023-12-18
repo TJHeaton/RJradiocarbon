@@ -17,7 +17,8 @@ PlotPosteriorHeights(
 \link{PPcalibrate}. Optionally, the output data can have an extra list item
 named \code{label} which is used to set the label on the plot legend.}
 
-\item{n_changes}{Which changes to plot for}
+\item{n_changes}{Which number of internal changes to plot for - a vector which can contain at most 4 elements, with
+values in the range 1 to 6. If not given \code{c(1, 2, 3)} will be used.}
 
 \item{n_burn}{The number of samples required for burn-in - any samples before this
 are not used in the calculation. If not given, the first half of the

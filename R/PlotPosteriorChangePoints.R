@@ -46,8 +46,8 @@ PlotPosteriorChangePoints <- function(
   max_density <- 0
   all_densities <- list()
 
-  posterior_n_internal_changes <- output_data$n_internal_changes[n_burn:n_end]
-  posterior_rate_s <- output_data$rate_s[n_burn:n_end]
+  posterior_n_internal_changes <- output_data$n_internal_changes[n_burn + 1:n_end]
+  posterior_rate_s <- output_data$rate_s[n_burn + 1:n_end]
 
   cal_age_range <- sort(output_data$input_parameters$pp_cal_age_range)
   if (is.na(kernel_bandwidth)) kernel_bandwidth <- diff(cal_age_range) / 50
