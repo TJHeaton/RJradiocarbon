@@ -143,6 +143,16 @@ PPcalibrate <- function(
       )
     )
 
+    # Extend to discretised calendar_grid_resolution
+    min_potential_calendar_age <- (
+      floor(min_potential_calendar_age/calendar_grid_resolution) *
+        calendar_grid_resolution
+    )
+    max_potential_calendar_age <- (
+      ceiling(max_potential_calendar_age/calendar_grid_resolution) *
+        calendar_grid_resolution
+    )
+
     # Do not extend beyond calibration curve calendar limits
     min_potential_calendar_age <- max(min_potential_calendar_age,
                                       min(calibration_curve$calendar_age_BP))
