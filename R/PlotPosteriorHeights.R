@@ -23,7 +23,7 @@ PlotPosteriorHeights <- function(
 
   arg_check <- .InitializeErrorList()
   .CheckRJPPOutputData(arg_check, output_data)
-  .CheckIntegerVector(arg_check, n_changes, lower = 1, upper = 4, max_length = 4)
+  .CheckIntegerVector(arg_check, n_changes, lower = 1, upper = 6, max_length = 4)
   .CheckNBurnAndNEnd(arg_check, n_burn, n_end, n_iter, n_thin)
   if (!is.na(kernel_bandwidth)) .CheckNumber(arg_check, kernel_bandwidth, lower = 0)
   .ReportErrors(arg_check)
@@ -34,8 +34,8 @@ PlotPosteriorHeights <- function(
   max_density <- 0
   all_densities <- list()
 
-  posterior_n_internal_changes <- output_data$n_internal_changes[n_burn:n_end]
-  posterior_rate_h <- output_data$rate_h[n_burn:n_end]
+  posterior_n_internal_changes <- output_data$n_internal_changes[n_burn + 1:n_end]
+  posterior_rate_h <- output_data$rate_h[n_burn + 1:n_end]
 
   max_height <- 0
   for (n_change in n_changes) {
@@ -48,14 +48,17 @@ PlotPosteriorHeights <- function(
   }
   if (is.na(kernel_bandwidth)) kernel_bandwidth <- max_height / 50
 
-  colors <- c("blue", "darkgreen", "red", "purple")
+  colors <- c("blue", "darkgreen", "red", "purple", "cyan3", "darkgrey")
   legend <- NULL
 
   for (n_change in n_changes) {
     legend <- c(legend, paste(n_change, "internal changes"))
 
     index <- which(posterior_n_internal_changes == n_change)
-    if(length(index) == 0) next
+    if (length(index) == 0) {
+      warning(paste("No posterior samples with", n_change, "internal changes"))
+      next
+    }
 
     extracted_posteriors <- do.call(rbind, posterior_rate_h[index])
     for (j in 1:(n_change + 1)) {
@@ -83,5 +86,5 @@ PlotPosteriorHeights <- function(
   for (line in all_densities) {
     graphics::lines(line$x, line$y, lty = line$n_change, col = colors[line$n_change], lwd = 2)
   }
-  legend("topright", legend = legend, lty = n_changes, col = colors)
+  legend("topright", legend = legend, lty = n_changes, col = colors[n_changes])
 }

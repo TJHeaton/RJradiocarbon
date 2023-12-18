@@ -5,7 +5,8 @@
 #' @param output_data The return value from the updating functions
 #' [RJradiocarbon::PPcalibrate]. Optionally, the output data can have an extra list item
 #' named `label` which is used to set the label on the plot legend.
-#' @param n_changes Which changes to plot for
+#' @param n_changes Which number of internal changes to plot for - a vector which can contain at most 4 elements, with
+#' values in the range 1 to 6. If not given `c(1, 2, 3)` will be used.
 #' @param n_burn The number of samples required for burn-in - any samples before this
 #' are not used in the calculation. If not given, the first half of the
 #' MCMC chain is discarded. Note that the maximum
@@ -34,7 +35,7 @@ PlotPosteriorChangePoints <- function(
 
   arg_check <- .InitializeErrorList()
   .CheckRJPPOutputData(arg_check, output_data)
-  .CheckIntegerVector(arg_check, n_changes, lower = 1, upper = 4, max_length = 4)
+  .CheckIntegerVector(arg_check, n_changes, lower = 1, upper = 6, max_length = 4)
   .CheckNBurnAndNEnd(arg_check, n_burn, n_end, n_iter, n_thin)
   if (!is.na(kernel_bandwidth)) .CheckNumber(arg_check, kernel_bandwidth, lower = 0)
   .ReportErrors(arg_check)
@@ -45,20 +46,23 @@ PlotPosteriorChangePoints <- function(
   max_density <- 0
   all_densities <- list()
 
-  posterior_n_internal_changes <- output_data$n_internal_changes[n_burn:n_end]
-  posterior_rate_s <- output_data$rate_s[n_burn:n_end]
+  posterior_n_internal_changes <- output_data$n_internal_changes[n_burn + 1:n_end]
+  posterior_rate_s <- output_data$rate_s[n_burn + 1:n_end]
 
   cal_age_range <- sort(output_data$input_parameters$pp_cal_age_range)
   if (is.na(kernel_bandwidth)) kernel_bandwidth <- diff(cal_age_range) / 50
 
-  colors <- c("blue", "darkgreen", "red", "purple")
+  colors <- c("blue", "darkgreen", "red", "purple", "cyan3", "darkgrey")
   legend <- NULL
 
   for (n_change in n_changes) {
     legend <- c(legend, paste(n_change, "internal changes"))
 
     index <- which(posterior_n_internal_changes == n_change)
-    if(length(index) == 0) next
+    if (length(index) == 0) {
+      warning(paste("No posterior samples with", n_change, "internal changes"))
+      next
+    }
 
     extracted_posteriors <- do.call(rbind, posterior_rate_s[index])
     for (j in 2:(n_change + 1)) {
@@ -87,6 +91,6 @@ PlotPosteriorChangePoints <- function(
   for (line in all_densities) {
     graphics::lines(line$x, line$y, lty = line$n_change, col = colors[line$n_change], lwd = 2)
   }
-  legend("topright", legend = legend, lty = n_changes, col = colors)
+  legend("topright", legend = legend, lty = n_changes, col = colors[n_changes])
   invisible(all_densities)
 }

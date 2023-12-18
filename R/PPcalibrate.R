@@ -61,6 +61,7 @@
 #' rc_determinations, how far you wish to extend the grid beyond this adaptive minimum and maximum
 #' The final range will be extended (eqaully on both sides) to cover (1 + grid_extension_factor) * (calendar_age_range)
 #'
+#' @param use_fast Adding a flag to allow trimming the likelihoods based on prob cutoff
 #'
 #' @return TODO
 #' @export
@@ -85,7 +86,8 @@ PPcalibrate <- function(
     bounding_range_prob_cutoff = 0.005,
     default_prior_h_rate = 0.1,
     initial_n_internal_changepoints = 10,
-    grid_extension_factor = 0.1) {
+    grid_extension_factor = 0.1,
+    use_fast = TRUE) {
 
   # TODO - Check both prior_h_shape and prior_h_rate specified (or both NA)
   # TODO - Check initial_n_internal_changepoints < k_max
@@ -256,6 +258,15 @@ PPcalibrate <- function(
       calibration_curve = calibration_curve)
   )
 
+  if (use_fast) {
+    trimmed_likelihood_calendar_ages_from_calibration_curve <- apply(
+      likelihood_calendar_ages_from_calibration_curve,
+      MARGIN = 2,
+      FUN = .FindTrimmedVectorAndIndices,
+      prob_cutoff = bounding_range_prob_cutoff,
+      simplify = FALSE)
+  }
+
   num_observations <- length(rc_determinations)
 
   # Set starting values to be initialised ones
@@ -282,12 +293,22 @@ PPcalibrate <- function(
 
   ## Store calendar_ages given initial_rate_s and initial_rate_h
   ## (sample from exactly using Gibbs)
-  calendar_ages <- UpdateCalendarAgesGibbs(
-    likelihood_calendar_ages_from_calibration_curve = likelihood_calendar_ages_from_calibration_curve,
-    calendar_age_grid = calendar_age_grid,
-    rate_s = rate_s,
-    rate_h = rate_h
-  )
+  if (use_fast) {
+    calendar_ages <- .TrimmedUpdateCalendarAgesGibbs(
+      trimmed_likelihood_calendar_ages_from_calibration_curve = trimmed_likelihood_calendar_ages_from_calibration_curve,
+      calendar_age_grid = calendar_age_grid,
+      rate_s = rate_s,
+      rate_h = rate_h
+    )
+  } else {
+    calendar_ages <- UpdateCalendarAgesGibbs(
+      likelihood_calendar_ages_from_calibration_curve = likelihood_calendar_ages_from_calibration_curve,
+      calendar_age_grid = calendar_age_grid,
+      rate_s = rate_s,
+      rate_h = rate_h
+    )
+  }
+
   theta_out[output_index, ] <- calendar_ages
 
 
@@ -306,12 +327,21 @@ PPcalibrate <- function(
   for(iter in 1:n_iter) {
 
     ## Step 1: Update calendar_ages given rate_s and rate_h (sample from exactly using Gibbs)
-    calendar_ages <- UpdateCalendarAgesGibbs(
-      likelihood_calendar_ages_from_calibration_curve = likelihood_calendar_ages_from_calibration_curve,
-      calendar_age_grid = calendar_age_grid,
-      rate_s = rate_s,
-      rate_h = rate_h
-    )
+    if (use_fast) {
+      calendar_ages <- .TrimmedUpdateCalendarAgesGibbs(
+        trimmed_likelihood_calendar_ages_from_calibration_curve = trimmed_likelihood_calendar_ages_from_calibration_curve,
+        calendar_age_grid = calendar_age_grid,
+        rate_s = rate_s,
+        rate_h = rate_h
+      )
+    } else {
+      calendar_ages <- UpdateCalendarAgesGibbs(
+        likelihood_calendar_ages_from_calibration_curve = likelihood_calendar_ages_from_calibration_curve,
+        calendar_age_grid = calendar_age_grid,
+        rate_s = rate_s,
+        rate_h = rate_h
+      )
+    }
 
     ## Step 2: Update rate_s and rate_h given current calendar_ages (using RJMCMC)
     updated_poisson_process <- UpdatePoissonProcessRateRevJump(

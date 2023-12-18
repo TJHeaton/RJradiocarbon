@@ -106,6 +106,18 @@
 }
 
 
+.FindTrimmedVectorAndIndices <- function(
+    vector,
+    prob_cutoff = 0.005) {
+
+  cumulative_sum <- cumsum(vector)
+  total_sum <- cumulative_sum[length(cumulative_sum)]
+
+  min_index <- min(which(cumulative_sum > prob_cutoff * total_sum))
+  max_index <- min(which(cumulative_sum > total_sum * (1 - prob_cutoff)))
+
+  return (list(values = vector[min_index:max_index], start_index = min_index, end_index = max_index))
+}
 
 
 # Need care with using the sample command as sometimes we pass a single integer j.
