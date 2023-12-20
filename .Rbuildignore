@@ -5,3 +5,4 @@
 ^experimenting
 ^data-raw$
 ^\.idea
+^README\.Rmd$
